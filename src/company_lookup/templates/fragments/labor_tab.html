@@ -1,0 +1,68 @@
+<div class="labor-risk-section">
+    {% if data and data.risk_items and data.risk_items|length > 0 %}
+    <div class="risk-header">
+        <h4><i class="bi bi-exclamation-triangle"></i> 劳动风险</h4>
+        <span class="risk-badge" style="background-color: {% if data.risk_level == '高' %}#dc3545{% elif data.risk_level == '中' %}#ffc107{% else %}#10b981{% endif %}; color: {% if data.risk_level == '高' or data.risk_level == '中' %}#000{% else %}#fff{% endif %};">
+            {{ data.risk_level or '低' }}风险
+        </span>
+    </div>
+    
+    <!-- 风险简析 -->
+    {% if data.risk_analysis %}
+    <div class="risk-analysis">
+        <h5><i class="bi bi-journal-text"></i> 风险简析</h5>
+        <p>{{ data.risk_analysis }}</p>
+    </div>
+    {% endif %}
+    
+    <!-- 风险记录列表 -->
+    <div class="risk-records">
+        <h5><i class="bi bi-file-text"></i> 风险记录（{{ data.risk_items|length }}条）</h5>
+        <ul class="risk-list">
+            {% for item in data.risk_items %}
+            <li class="risk-item">
+                <div class="risk-item-header">
+                    <span class="risk-type">{{ item.type }}</span>
+                    <span class="risk-date">{{ item.date }}</span>
+                </div>
+                {% if item.amount %}
+                <div class="risk-item-detail">
+                    <span class="risk-amount">涉及金额: {{ item.amount }}</span>
+                </div>
+                {% endif %}
+                {% if item.summary %}
+                <div class="risk-item-summary">{{ item.summary }}</div>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <!-- 求职建议 -->
+    <div class="risk-advice">
+        <h5><i class="bi bi-lightbulb"></i> 求职建议</h5>
+        <p>入职前建议核实劳动合同条款、薪资发放记录、社保缴纳情况。</p>
+    </div>
+    {% elif data and data.risk_level %}
+    <div class="risk-header">
+        <h4><i class="bi bi-exclamation-triangle"></i> 劳动风险</h4>
+        <span class="risk-badge" style="background-color: #10b981; color: #fff;">
+            低风险
+        </span>
+    </div>
+    {% if data.risk_analysis %}
+    <div class="risk-analysis">
+        <h5><i class="bi bi-journal-text"></i> 风险简析</h5>
+        <p>{{ data.risk_analysis }}</p>
+    </div>
+    {% else %}
+    <div class="safe-message">
+        <i class="bi bi-check-circle"></i> 暂无劳动风险记录。不过没有记录不代表一定没问题，面试时可以顺口问问公司最近的劳动纠纷情况。
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="safe-message">
+        <i class="bi bi-check-circle"></i> 暂无劳动风险记录
+    </div>
+    {% endif %}
+</div>

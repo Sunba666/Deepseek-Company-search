@@ -1,0 +1,68 @@
+<!-- 求职看板列表 -->
+<div class="row mb-4">
+    {% for status, count in counts.items() %}
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card text-center border-0 shadow-sm h-100">
+            <div class="card-body py-3">
+                <div class="display-6 fw-bold text-primary">{{ count }}</div>
+                <div class="small text-muted">{{ status }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if cards %}
+<div class="row">
+    {% for card in cards %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h6 class="card-title mb-1"><i class="bi bi-building"></i> {{ card.company_name }}</h6>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            {{ card.status }}
+                        </button>
+                        <ul class="dropdown-menu">
+                            {% for s in ['意向','已投递','面试中','Offer'] %}
+                            <li>
+                                <button class="dropdown-item {% if s == card.status %}active{% endif %}"
+                                        hx-post="/jobboard/update"
+                                        hx-vals='{"id": "{{ card.id }}", "status": "{{ s }}"}'
+                                        hx-target="#jobboard-container"
+                                        hx-swap="innerHTML">
+                                    {% if s == '意向' %}<i class="bi bi-search"></i>
+                                    {% elif s == '已投递' %}<i class="bi bi-send"></i>
+                                    {% elif s == '面试中' %}<i class="bi bi-chat-dots"></i>
+                                    {% elif s == 'Offer' %}<i class="bi bi-trophy"></i>{% endif %}
+                                    {{ s }}
+                                </button>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% if card.note %}
+                <p class="small text-muted mt-2 mb-0">{{ card.note }}</p>
+                {% endif %}
+                <div class="mt-2 d-flex justify-content-between align-items-center">
+                    <small class="text-muted">{{ card.updated_at[:10] }}</small>
+                    <button class="btn btn-sm btn-outline-danger jobboard-delete"
+                            data-id="{{ card.id }}"
+                            onclick="return false;">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+    <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+    <p class="mt-2">还没有添加目标公司</p>
+    <p class="small">点击"添加公司"按钮开始跟踪求职进度</p>
+</div>
+{% endif %}

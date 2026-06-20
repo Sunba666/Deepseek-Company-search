@@ -1,0 +1,34 @@
+{
+  "悠星网络科技有限公司": {
+    "canonical_name": "悠星网络科技有限公司",
+    "aliases": [
+      "Yostar",
+      "悠星",
+      "悠星网络",
+      "Yostar Games"
+    ],
+    "fields": {
+      "company_profile": {
+        "value": "中国游戏公司，以发行《明日方舟》《碧蓝航线》等二次元游戏闻名",
+        "sources": [
+          "user_feedback"
+        ],
+        "confidence": "high",
+        "last_updated": "2026-06-18T01:43:26.757554"
+      },
+      "industry": {
+        "value": "游戏开发和发行",
+        "sources": [
+          "user_feedback"
+        ],
+        "confidence": "medium",
+        "last_updated": "2026-06-18T01:43:26.757569"
+      }
+    },
+    "merged_at": "2026-06-18T01:43:26.757574",
+    "verified_at": "2026-06-18T01:43:26.757578",
+    "verification_confidence": "high",
+    "feedback_count": 1,
+    "status": "verified"
+  }
+}

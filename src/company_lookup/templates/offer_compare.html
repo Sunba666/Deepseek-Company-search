@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4"><i class="bi bi-briefcase"></i> Offer 对比器</h1>
+    <p class="text-center text-muted mb-6">输入2-3个Offer信息，AI帮你分析最优选择</p>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-file-text"></i> 添加Offer</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/offer-compare">
+                        <div class="mb-3">
+                            <label>Offer 1</label>
+                            <textarea name="offers" class="form-control" rows="3" placeholder="例如：阿里巴巴 P6，月薪35K，16薪，公积金12%，杭州，通勤30分钟"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label>Offer 2</label>
+                            <textarea name="offers" class="form-control" rows="3" placeholder="例如：腾讯 T3，月薪32K，15薪，公积金12%，深圳，通勤45分钟"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label>Offer 3（可选）</label>
+                            <textarea name="offers" class="form-control" rows="3" placeholder="例如：字节跳动 2-1，月薪38K，14薪，公积金12%，北京，通勤60分钟"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="compareBtn">
+    <span id="compareBtnText">开始对比分析</span>
+    <span id="compareSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-bar-chart"></i> 对比结果</h5>
+                </div>
+                <div class="card-body">
+                    {% if result and not result.error %}
+                        <!-- 最优选择 -->
+                        <div class="alert alert-success mb-4">
+                            <h4><i class="bi bi-trophy"></i> 最优选择：{{ result.winner }}</h4>
+                            <p>{{ result.reason }}</p>
+                        </div>
+
+                        <!-- 对比表格 -->
+                        <table class="table table-striped mb-4">
+                            <thead>
+                                <tr>
+                                    <th>公司</th>
+                                    <th>综合评分</th>
+                                    <th>优点</th>
+                                    <th>缺点</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for offer in result.comparison %}
+                                <tr>
+                                    <td>{{ offer.name }}</td>
+                                    <td>{{ offer.score }}分</td>
+                                    <td>
+                                        {% for p in offer.pros %}
+                                        <span class="badge bg-success">{{ p }}</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for c in offer.cons %}
+                                        <span class="badge bg-danger">{{ c }}</span>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <!-- 谈判建议 -->
+                        <div class="border p-4 rounded">
+                            <h5><i class="bi bi-chat-quote"></i> 谈判建议</h5>
+                            <ul>
+                                {% for tip in result.negotiation_tips %}
+                                <li>{{ tip }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+
+                        <!-- 综合总结 -->
+                        <div class="mt-4 p-4 bg-secondary-custom rounded">
+                            <h5><i class="bi bi-journal-text"></i> 综合总结</h5>
+                            <p class="text-primary-custom">{{ result.summary }}</p>
+                        </div>
+
+                        <!-- 下载按钮 -->
+                        <button class="btn btn-secondary mt-4" onclick="downloadComparison()">下载对比报告</button>
+                    {% else %}
+                        <div class="text-center py-8">
+                            <p class="text-muted">请在左侧输入Offer信息进行对比</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let isSubmitting = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const compareBtn = document.getElementById('compareBtn');
+    const compareBtnText = document.getElementById('compareBtnText');
+    const compareSpinner = document.getElementById('compareSpinner');
+    
+    form.addEventListener('submit', function(e) {
+        if (isSubmitting) {
+            e.preventDefault();
+            return;
+        }
+        
+        // 验证至少有两个Offer
+        const offerTextareas = document.querySelectorAll('textarea[name="offers"]');
+        let filledCount = 0;
+        offerTextareas.forEach(ta => {
+            if (ta.value.trim()) filledCount++;
+        });
+        
+        if (filledCount < 2) {
+            e.preventDefault();
+            showAlert('请至少填写两个Offer进行对比', 'warning');
+            return;
+        }
+        
+        // 显示加载状态
+        isSubmitting = true;
+        compareBtn.disabled = true;
+        compareBtnText.textContent = '对比分析中...';
+        compareSpinner.classList.remove('d-none');
+    });
+});
+
+function showAlert(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.card-body').prepend(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+
+function downloadComparison() {
+    {% if result %}
+    const result = {{ result|tojson|safe }};
+    let content = "Offer对比报告\n";
+    content += "================\n\n";
+    content += "最优选择: " + result.winner + "\n";
+    content += "选择理由: " + result.reason + "\n\n";
+    content += "对比详情:\n";
+    
+    result.comparison.forEach((offer, index) => {
+        content += `${index + 1}. ${offer.name}\n`;
+        content += `   评分: ${offer.score}分\n`;
+        content += `   优点: ${offer.pros.join(', ')}\n`;
+        content += `   缺点: ${offer.cons.join(', ')}\n\n`;
+    });
+    
+    content += "谈判建议:\n";
+    result.negotiation_tips.forEach((tip, index) => {
+        content += `${index + 1}. ${tip}\n`;
+    });
+    
+    const blob = new Blob([content], {type: 'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'offer_comparison.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    {% else %}
+    showAlert('请先进行Offer对比分析', 'warning');
+    {% endif %}
+}
+</script>
+{% endblock %}

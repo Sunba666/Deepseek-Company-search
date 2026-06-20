@@ -1,0 +1,797 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+<!-- API状态移至页面底部 -->
+
+    <!-- 标题区域 -->
+    <div class="text-center mb-5">
+        <h1 class="gradient-title">企业实际情况查阅</h1>
+        <p class="lead" style="color: var(--ink-secondary); margin-bottom: var(--space-4);">多源数据聚合，AI智能分析，支持简称匹配</p>
+        <div class="feature-badges">
+            <span class="badge" style="background: var(--primary-light); color: var(--primary);"><i class="bi bi-stars"></i> AI深度分析</span>
+            <span class="badge" style="background: var(--success-bg); color: var(--success);"><i class="bi bi-arrow-down-circle"></i> 动态降级</span>
+            <span class="badge" style="background: var(--info-bg); color: var(--info);"><i class="bi bi-check-circle"></i> 智能匹配</span>
+        </div>
+    </div>
+
+    <!-- 搜索区域 -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-10">
+            <div class="card search-card shadow-lg">
+                <div class="card-body p-4">
+                    <div class="search-header mb-3">
+                        <h5 class="card-title mb-0" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="bi bi-crosshair" style="color: var(--primary);"></i> 企业查询
+                        </h5>
+                        <small style="color: var(--ink-muted);">输入公司名称，看看这家公司值不值得去</small>
+                    </div>
+                    <form id="search-form" hx-post="/company/search" hx-target="#report-result" hx-indicator="#search-spinner">
+                        <div class="suggest-search-container">
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-secondary-custom border-end-0">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input 
+                                    type="text" 
+                                    name="company_name" 
+                                    id="search-input"
+                                    class="form-control border-start-0" 
+                                    placeholder="搜公司，比如 腾讯、米哈游、字节跳动…"
+                                    autocomplete="off"
+                                    required
+                                >
+                                <button type="submit" id="search-btn" class="btn btn-primary px-4">
+                                    <span id="search-btn-text">查询</span>
+                                    <span id="search-spinner" class="spinner-border spinner-border-sm htmx-indicator" role="status"></span>
+                                </button>
+                            </div>
+                            <!-- 搜索建议列表 -->
+                            <div id="suggestions" class="suggestions-list"></div>
+                        </div>
+                    </form>
+                    <div class="quick-search-tags mt-3">
+                        <span class="text-muted small">热门搜索：</span>
+                        <button class="btn btn-sm btn-outline-primary quick-tag" onclick="searchCompany('腾讯')">腾讯</button>
+                        <button class="btn btn-sm btn-outline-primary quick-tag" onclick="searchCompany('阿里巴巴')">阿里巴巴</button>
+                        <button class="btn btn-sm btn-outline-primary quick-tag" onclick="searchCompany('字节跳动')">字节跳动</button>
+                        <button class="btn btn-sm btn-outline-primary quick-tag" onclick="searchCompany('华为')">华为</button>
+                        <button class="btn btn-sm btn-outline-primary quick-tag" onclick="searchCompany('米哈游')">米哈游</button>
+                    </div>
+                    
+                    <!-- 搜索历史 -->
+                    <div id="search-history-container" class="search-history-container mt-2">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="text-muted small"><i class="bi bi-clock-history"></i> 最近搜索：</span>
+                            <button class="history-clear" onclick="clearSearchHistory()">清除</button>
+                        </div>
+                        <div id="search-history-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 实体解析确认区域 -->
+    <div id="entity-suggestion" class="row mb-4" style="display: none;">
+        <div class="col-md-10 offset-md-1">
+            <div class="alert alert-info" id="suggestion-alert">
+                <!-- 动态填充建议内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 报告结果显示区域 -->
+    <div id="report-result" class="mb-6" hx-indicator="#report-skeleton">
+        <!-- 初始提示 -->
+        <div class="text-center text-muted py-5">
+            <div class="spinner-border text-primary mb-3" role="status" style="display: none;">
+                <span class="visually-hidden">加载中...</span>
+            </div>
+            <div id="initial-hint">
+                <i class="bi bi-search" style="font-size: 3.5rem; color: var(--ink-muted);"></i>
+                <p class="mt-3" style="font-size: 1.1rem; color: var(--ink-secondary); font-weight: 500;">想知道哪家公司好不好？搜一下就知道</p>
+                <p style="color: var(--ink-muted);">支持简称匹配：如"腾讯"、"阿里"、"米哈游"</p>
+            </div>
+            
+            <!-- 加载骨架屏 -->
+            <div id="report-skeleton" class="htmx-indicator">
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-line" style="width: 40%; height: 20px;"></div>
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line" style="width: 80%;"></div>
+                    <div class="mt-3"></div>
+                    <div class="skeleton skeleton-line"></div>
+                    <div class="skeleton skeleton-line" style="width: 60%;"></div>
+                    <div class="skeleton skeleton-line"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API数据源说明 -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">📡 API数据源说明</h6>
+                    <div class="row small g-3">
+                        <div class="col-md-3">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <i class="bi bi-building" style="color: var(--primary);"></i>
+                                <strong>工商信息</strong>
+                            </div>
+                            <p class="text-muted mb-1" style="font-size: 0.8rem;">天眼查/企查查</p>
+                            <span class="badge bg-secondary" id="entity-status">模拟数据</span>
+                        </div>
+                        <div class="col-md-3">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <i class="bi bi-chat-dots" style="color: var(--warning);"></i>
+                                <strong>网络舆情</strong>
+                            </div>
+                            <p class="text-muted mb-1" style="font-size: 0.8rem;">Tavily/必应搜索</p>
+                            <span class="badge bg-secondary" id="sentiment-status">模拟数据</span>
+                        </div>
+                        <div class="col-md-3">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <i class="bi bi-shield-exclamation" style="color: var(--danger);"></i>
+                                <strong>司法风险</strong>
+                            </div>
+                            <p class="text-muted mb-1" style="font-size: 0.8rem;">裁判文书网</p>
+                            <span class="badge bg-secondary" id="risk-status">模拟数据</span>
+                        </div>
+                        <div class="col-md-3">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <i class="bi bi-robot" style="color: var(--primary);"></i>
+                                <strong>AI智能分析</strong>
+                            </div>
+                            <p class="text-muted mb-1" style="font-size: 0.8rem;">DeepSeek</p>
+                            <span class="badge bg-success" id="ai-status"><i class="bi bi-check"></i> 已配置</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <p class="small text-muted mb-0">
+                        <strong>动态降级说明：</strong>
+                        系统会自动检测各API的可用性，只展示有数据的模块。
+                        一个API失败不会影响其他API的展示。
+                        配置真实API Key后，将自动切换到真实数据。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 全局变量
+let currentResolvedName = null;
+
+// 安全获取DOM元素
+function safeGetElement(id) {
+    const el = document.getElementById(id);
+    if (!el) {
+        console.warn('元素 #' + id + ' 不存在，跳过操作');
+    }
+    return el;
+}
+
+// 带超时的 fetch（15s 硬超时）
+function fetchWithTimeout(url, options, timeoutMs = 15000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    return fetch(url, { ...options, signal: controller.signal })
+        .finally(() => clearTimeout(timeoutId));
+}
+
+// 安全设置元素样式
+function safeSetStyle(id, property, value) {
+    const el = safeGetElement(id);
+    if (el) {
+        el.style[property] = value;
+    }
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 加载API状态
+    loadApiStatus();
+    
+    // 搜索框回车事件
+    const searchInput = safeGetElement('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();  // 阻止 HTMX 同时触发表单提交
+                performSearch();
+            }
+        });
+    }
+});
+
+// 加载API状态
+function loadApiStatus() {
+    fetchWithTimeout('/api/api-status', {}, 5000)
+    .then(response => response.json())
+    .then(data => {
+        if (data.code === 0 && data.data) {
+            renderApiStatus(data.data);
+            updateDataSourceStatus(data.data);
+        }
+    })
+    .catch(err => {
+        console.error('加载API状态失败:', err);
+    });
+}
+
+// 更新数据源状态显示
+function updateDataSourceStatus(data) {
+    const status = data.status || {};
+    
+    // 更新工商信息状态
+    const entityApis = status.entity_apis || {};
+    const entityConfigured = Object.values(entityApis).some(api => api.configured);
+    const entityStatusEl = safeGetElement('entity-status');
+    if (entityStatusEl) {
+        entityStatusEl.textContent = entityConfigured ? '✓ 已配置' : '模拟数据';
+        entityStatusEl.className = entityConfigured ? 'badge bg-success' : 'badge bg-secondary';
+    }
+    
+    // 更新舆情状态
+    const sentimentApis = status.sentiment_apis || {};
+    const sentimentConfigured = Object.values(sentimentApis).some(api => api.configured);
+    const sentimentStatusEl = safeGetElement('sentiment-status');
+    if (sentimentStatusEl) {
+        sentimentStatusEl.textContent = sentimentConfigured ? '✓ 已配置' : '模拟数据';
+        sentimentStatusEl.className = sentimentConfigured ? 'badge bg-success' : 'badge bg-secondary';
+    }
+    
+    // 更新风险状态
+    const riskApis = status.risk_apis || {};
+    const riskConfigured = Object.values(riskApis).some(api => api.configured);
+    const riskStatusEl = safeGetElement('risk-status');
+    if (riskStatusEl) {
+        riskStatusEl.textContent = riskConfigured ? '✓ 已配置' : '模拟数据';
+        riskStatusEl.className = riskConfigured ? 'badge bg-success' : 'badge bg-secondary';
+    }
+    
+    // 更新AI状态
+    const aiApis = status.ai_apis || {};
+    const aiConfigured = Object.values(aiApis).some(api => api.configured);
+    const aiStatusEl = safeGetElement('ai-status');
+    if (aiStatusEl) {
+        aiStatusEl.textContent = aiConfigured ? '✓ 已配置' : '未配置';
+        aiStatusEl.className = aiConfigured ? 'badge bg-success' : 'badge bg-danger';
+    }
+}
+
+// 渲染API状态
+function renderApiStatus(data) {
+    const content = safeGetElement('api-status-content');
+    const modeBadge = safeGetElement('mode-badge');
+    
+    // 模式标签
+    if (modeBadge) {
+        modeBadge.textContent = data.mode_label || '未知';
+        modeBadge.className = data.mode === 'production' ? 'mode-badge mode-production' : 'mode-badge mode-mock';
+    }
+    
+    if (!content) return;
+    
+    // 构建状态内容
+    let html = `
+        <div class="api-status-summary">
+            <span class="status-count">配置状态: ${data.configured_count}/${data.total_count} API已配置</span>
+            <span class="status-mode">运行模式: ${data.mode_label}</span>
+        </div>
+        <div class="api-status-details">
+    `;
+    
+    // 第一层：工商信息
+    html += '<div class="api-layer">';
+    html += '<span class="layer-icon"><i class="bi bi-journal-text"></i></span>';
+    html += '<span class="layer-title">第一层：工商信息</span>';
+    html += '<div class="api-items">';
+    const entityApis = data.status?.entity_apis || {};
+    for (const [name, info] of Object.entries(entityApis)) {
+        html += `<span class="api-item ${info.configured ? 'configured' : 'not-configured'}">`;
+        html += info.configured ? '✓ ' : '✗ ';
+        html += name;
+        if (!info.configured && info.apply_url) {
+            html += ` <a href="${info.apply_url}" target="_blank" class="apply-link">[申请]</a>`;
+        }
+        html += '</span>';
+    }
+    html += '</div></div>';
+    
+    // 第二层：舆情搜索
+    html += '<div class="api-layer">';
+    html += '<span class="layer-icon">🗣️</span>';
+    html += '<span class="layer-title">第二层：舆情搜索</span>';
+    html += '<div class="api-items">';
+    const sentimentApis = data.status?.sentiment_apis || {};
+    for (const [name, info] of Object.entries(sentimentApis)) {
+        html += `<span class="api-item ${info.configured ? 'configured' : 'not-configured'}">`;
+        html += info.configured ? '✓ ' : '✗ ';
+        html += name;
+        if (!info.configured && info.apply_url) {
+            html += ` <a href="${info.apply_url}" target="_blank" class="apply-link">[申请]</a>`;
+        }
+        html += '</span>';
+    }
+    html += '</div></div>';
+    
+    // 第三层：司法风险
+    html += '<div class="api-layer">';
+    html += '<span class="layer-icon"><i class="bi bi-balance-scale"></i></span>';
+    html += '<span class="layer-title">第三层：司法风险</span>';
+    html += '<div class="api-items">';
+    const riskApis = data.status?.risk_apis || {};
+    for (const [name, info] of Object.entries(riskApis)) {
+        html += `<span class="api-item ${info.configured ? 'configured' : 'not-configured'}">`;
+        html += info.configured ? '✓ ' : info.public ? '⚪ ' : '✗ ';
+        html += name;
+        if (!info.configured && info.apply_url) {
+            html += ` <a href="${info.apply_url}" target="_blank" class="apply-link">[申请]</a>`;
+        }
+        html += '</span>';
+    }
+    html += '</div></div>';
+    
+    // AI智能分析
+    html += '<div class="api-layer">';
+    html += '<span class="layer-icon"><i class="bi bi-robot"></i></span>';
+    html += '<span class="layer-title">AI智能分析</span>';
+    html += '<div class="api-items">';
+    const aiApis = data.status?.ai_apis || {};
+    for (const [name, info] of Object.entries(aiApis)) {
+        html += `<span class="api-item ${info.configured ? 'configured' : 'not-configured'}">`;
+        html += info.configured ? '✓ ' : '✗ ';
+        html += name;
+        if (!info.configured && info.apply_url) {
+            html += ` <a href="${info.apply_url}" target="_blank" class="apply-link">[申请]</a>`;
+        }
+        html += '</span>';
+    }
+    html += '</div></div>';
+    
+    html += '</div>';
+    html += `<div class="api-status-tip">${data.tip || ''}</div>`;
+    
+    content.innerHTML = html;
+}
+
+// 搜索公司（快速标签）：直接触发 HTMX 表单提交，避免 JS 路径的确认对话框
+function searchCompany(name) {
+    const searchInput = safeGetElement('search-input');
+    if (searchInput) {
+        searchInput.value = name;
+    }
+    // 直接提交 HTMX 表单，走完整的后端搜索链路
+    const form = document.getElementById('search-form');
+    if (form) {
+        htmx.trigger(form, 'submit');
+    } else {
+        performSearch();
+    }
+}
+
+// 执行搜索
+// 执行搜索（统一使用 HTMX 表单提交）
+function performSearch() {
+    var queryInput = safeGetElement('search-input');
+    if (queryInput) {
+        addSearchHistory(queryInput.value.trim());
+    }
+    
+    // 直接提交 HTMX 表单，走完整的后端搜索链路：AI消歧+聚合+AI分析
+    var form = document.getElementById('search-form');
+    if (form && typeof htmx !== 'undefined') {
+        htmx.trigger(form, 'submit');
+    } else if (form) {
+        form.submit();
+    }
+}
+
+// 处理实体解析结果
+function handleResolveResult(data) {
+    // 获取是否使用异步模式
+    const useAsync = safeGetElement('async-mode')?.checked || false;
+
+    // 根据解析结果处理
+    if (data.status === 'matched') {
+        // 直接匹配，开始查询
+        currentResolvedName = data.matched_name;
+        fetchReport(data.matched_name, useAsync);
+
+    } else if (data.status === 'suggestion') {
+        // 有建议，显示确认提示（传递async参数）
+        showSuggestion(data, useAsync);
+
+    } else if (data.status === 'candidates') {
+        // 有多个候选，让用户选择
+        showCandidates(data.candidates, useAsync);
+
+    } else if (data.status === 'poi_found') {
+        // 通过POI找到，显示POI数据
+        showPOIResult(data);
+
+    } else if (data.status === 'not_found') {
+        // 未找到，显示友好提示
+        showNotFound(data);
+
+    } else {
+        // 未找到
+        const reportResult = safeGetElement('report-result');
+        if (reportResult) {
+            reportResult.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-warning">
+                        ${data.message || '未找到匹配的企业'}
+                    </div>
+                </div>
+            `;
+        }
+    }
+}
+
+// 显示建议确认
+function showSuggestion(data, useAsync = false) {
+    const suggestionAlert = safeGetElement('suggestion-alert');
+    const entitySuggestion = safeGetElement('entity-suggestion');
+
+    if (suggestionAlert) {
+        suggestionAlert.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong><i class="bi bi-search"></i> 您搜索的是"${data.message.split('：')[0]}"，系统已自动匹配到工商注册名：</strong>
+                    <span class="text-primary">${data.matched_name}</span>
+                </div>
+                <button type="button" class="btn-close" onclick="hideSuggestion()"></button>
+            </div>
+            <div class="mt-2">
+                <button class="btn btn-primary btn-sm me-2" onclick="confirmSearch('${data.matched_name}', ${useAsync})">
+                    <i class="bi bi-check-circle"></i> 确认查询
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="hideSuggestion()">
+                    取消
+                </button>
+            </div>
+        `;
+    }
+
+    if (entitySuggestion) {
+        entitySuggestion.style.display = 'block';
+    }
+}
+
+// 隐藏建议
+function hideSuggestion() {
+    const entitySuggestion = safeGetElement('entity-suggestion');
+    if (entitySuggestion) {
+        entitySuggestion.style.display = 'none';
+    }
+}
+
+// 确认搜索
+function confirmSearch(name, useAsync = false) {
+    currentResolvedName = name;
+    hideSuggestion();
+    const spinner = document.querySelector('.spinner-border');
+    if (spinner) spinner.style.display = 'inline-block';
+    fetchReport(name, useAsync);
+}
+
+// 显示候选列表
+function showCandidates(candidates, useAsync = false) {
+    let html = '<h5>找到多个候选公司，请选择：</h5>';
+    html += '<div class="list-group">';
+    candidates.forEach(candidate => {
+        html += `
+            <button class="list-group-item list-group-item-action"
+                    onclick="confirmSearch('${candidate.name}', ${useAsync})">
+                <strong>${candidate.name}</strong>
+                <span class="badge bg-secondary float-end">${candidate.source}</span>
+                <span class="badge bg-info float-end me-2">${candidate.confidence}</span>
+            </button>
+        `;
+    });
+    html += '</div>';
+
+    const reportResult = safeGetElement('report-result');
+    if (reportResult) {
+        reportResult.innerHTML = html;
+    }
+}
+
+// 显示POI结果
+function showPOIResult(data) {
+    const poiData = data.poi_data || [];
+    const searchInput = safeGetElement('search-input');
+    const query = searchInput ? searchInput.value.trim() : data.query || '';
+    
+    let poiHtml = '';
+    poiData.forEach((poi, index) => {
+        poiHtml += `
+            <div class="card mb-2">
+                <div class="card-body">
+                    <h6 class="card-title">📍 ${poi.name}</h6>
+                    <p class="card-text small">
+                        <strong>地址：</strong>${poi.address || '未知'}<br>
+                        <strong>类型：</strong>${poi.type || '未知'}<br>
+                        ${poi.tel ? `<strong>电话：</strong>${poi.tel}` : ''}
+                    </p>
+                </div>
+            </div>
+        `;
+    });
+    
+    const reportResult = safeGetElement('report-result');
+    if (reportResult) {
+        reportResult.innerHTML = `
+            <div class="alert alert-warning">
+                <h5><i class="bi bi-exclamation-triangle"></i> 未找到官方工商信息</h5>
+                <p class="text-muted mb-3">以下为地图POI数据，仅供参考：</p>
+                ${poiHtml}
+                <hr>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <i class="bi bi-lightbulb"></i> 如需更准确的信息，建议：
+                        </small>
+                        <ul class="small text-muted mt-2">
+                            <li>使用完整的工商注册名称重新查询</li>
+                            <li>在企查查/天眼查中检索该公司</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <a href="https://www.baidu.com/s?wd=${encodeURIComponent(query)}公司工商信息" 
+                           target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-box-arrow-up-right"></i> 在百度搜索
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// 显示未找到界面
+function showNotFound(data) {
+    const suggestions = data.suggestions || [];
+    const searchInput = safeGetElement('search-input');
+    const query = searchInput ? searchInput.value.trim() : data.query || '';
+    
+    let suggestionsHtml = '';
+    suggestions.forEach(suggestion => {
+        suggestionsHtml += `<li>${suggestion}</li>`;
+    });
+    
+    const reportResult = safeGetElement('report-result');
+    if (reportResult) {
+        reportResult.innerHTML = `
+            <div class="alert alert-info">
+                <h5><i class="bi bi-search"></i> 未找到"${query}"的公开工商信息</h5>
+                <p class="text-muted">这可能是因为：</p>
+                <ul class="text-muted">
+                    <li>该公司尚未被公开数据库收录（小微企业、个体户、新成立公司）</li>
+                    <li>输入的名称与工商注册名不完全一致</li>
+                </ul>
+                
+                <hr>
+                
+                <h6><i class="bi bi-lightbulb"></i> 您可以尝试：</h6>
+                <ul>
+                    ${suggestionsHtml}
+                </ul>
+                
+                <hr>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-primary btn-sm w-100" 
+                                onclick="trySimplifiedSearch('${query}')">
+                            <i class="bi bi-zoom-in"></i> 尝试简化搜索
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="https://www.baidu.com/s?wd=${encodeURIComponent(query)}" 
+                           target="_blank" class="btn btn-outline-secondary btn-sm w-100">
+                            <i class="bi bi-box-arrow-up-right"></i> 在百度手动查询
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-info btn-sm w-100" 
+                                onclick="reportCompany('${query}')">
+                            <i class="bi bi-send"></i> 反馈公司存在
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mt-3 small text-muted">
+                    <i class="bi bi-lightbulb"></i> 如果您确认该公司存在，建议在企查查/天眼查中检索其完整工商名称，然后重新输入。
+                </div>
+            </div>
+        `;
+    }
+}
+
+// 获取报告
+function fetchReport(companyName, useAsync = false) {
+    const resultDiv = safeGetElement('report-result');
+
+    // 使用异步查询模式
+    if (useAsync) {
+        fetchWithTimeout('/company/search-async', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `query=${encodeURIComponent(companyName)}`
+        })
+        .then(response => response.text())
+        .then(html => {
+            // 立即显示加载状态
+            if (resultDiv) {
+                resultDiv.innerHTML = html;
+            }
+            // 恢复按钮状态（轮询会自动更新结果）
+            var btnText = safeGetElement('search-btn-text'); if (btnText) btnText.style.display = 'inline';
+            var spinner = safeGetElement('search-spinner'); if (spinner) spinner.classList.add('d-none');
+        })
+        .catch(error => {
+            console.error('发起查询失败:', error);
+            if (resultDiv) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        发起查询失败，请稍后重试
+                    </div>
+                `;
+            }
+            // 恢复按钮状态
+            var btnText = safeGetElement('search-btn-text'); if (btnText) btnText.style.display = 'inline';
+            var spinner = safeGetElement('search-spinner'); if (spinner) spinner.classList.add('d-none');
+        });
+        return;
+    }
+
+    // 使用同步查询模式（原逻辑）
+    fetchWithTimeout('/api/aggregate-report-htmx', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `company_name=${encodeURIComponent(companyName)}`
+    })
+    .then(response => response.text())
+    .then(html => {
+        if (resultDiv) {
+            resultDiv.innerHTML = html;
+        }
+    })
+    .catch(error => {
+        console.error('获取报告失败:', error);
+        const timeoutMsg = error.name === 'AbortError' ? '请求超时，可能外部 API 响应较慢，请稍后重试' : '获取报告失败，请稍后重试';
+        if (resultDiv) {
+            resultDiv.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>' + timeoutMsg + '</div>';
+        }
+    })
+    .finally(() => {
+        const spinner = document.querySelector('.spinner-border');
+        if (spinner) spinner.style.display = 'none';
+    });
+}
+
+// 尝试简化搜索
+function trySimplifiedSearch(query) {
+    fetchWithTimeout('/api/simplify-name', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `query=${encodeURIComponent(query)}`
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.code === 0 && result.data && result.data.simplified) {
+            const simplified = result.data.simplified;
+            if (simplified !== query) {
+                const searchInput = safeGetElement('search-input');
+                if (searchInput) searchInput.value = simplified;
+                performSearch();
+            } else {
+                alert('无法进一步简化公司名称');
+            }
+        }
+    })
+    .catch(err => {
+        console.error('简化失败:', err);
+    });
+}
+
+// ========== 搜索历史管理 ==========
+const SEARCH_HISTORY_KEY = 'company_lookup_history';
+const MAX_HISTORY = 8;
+
+function getSearchHistory() {
+    try {
+        const raw = localStorage.getItem(SEARCH_HISTORY_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+}
+
+function addSearchHistory(name) {
+    if (!name || name.trim().length < 2) return;
+    name = name.trim();
+    let history = getSearchHistory();
+    history = history.filter(h => h !== name);
+    history.unshift(name);
+    if (history.length > MAX_HISTORY) history = history.slice(0, MAX_HISTORY);
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
+    renderSearchHistory();
+}
+
+function clearSearchHistory() {
+    localStorage.removeItem(SEARCH_HISTORY_KEY);
+    renderSearchHistory();
+}
+
+function renderSearchHistory() {
+    const container = document.getElementById('search-history-container');
+    const list = document.getElementById('search-history-list');
+    if (!container || !list) return;
+    const history = getSearchHistory();
+    if (history.length === 0) {
+        container.classList.remove('show');
+        return;
+    }
+    container.classList.add('show');
+        list.innerHTML = history.map(function(h) { 
+        var safeName = h.replace(/'/g, "\\u2019");
+        return '<button class="history-item" data-company="' + safeName + '">' +
+        '<i class="bi bi-clock me-1"></i>' + h + '</button>';
+    }).join('');;
+}
+
+// Call renderSearchHistory on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    renderSearchHistory();
+    
+    // 历史项点击委托（避免 onclick 转义问题）
+    var histList = safeGetElement('search-history-list'); if (histList) histList.addEventListener('click', function(e) {
+        var btn = e.target.closest('.history-item');
+        if (btn) {
+            var name = btn.getAttribute('data-company') || btn.textContent.trim();
+            if (name) {
+                searchCompany(name);
+            }
+        }
+    });
+});
+
+// ========== 原有函数 ==========
+// 反馈公司存在
+function reportCompany(query) {
+    if (confirm(`您确认"${query}"这家公司存在吗？\n\n这将帮助我们改进数据库。`)) {
+        fetchWithTimeout('/api/report-missing-company', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `company_name=${encodeURIComponent(query)}`
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.code === 0) {
+                alert('感谢您的反馈！我们会尽快处理。');
+            } else {
+                alert('反馈没发出去，可能是网络问题。等会儿再试试？');
+            }
+        })
+        .catch(err => {
+            console.error('反馈失败:', err);
+            alert('反馈没发出去，可能是网络问题。等会儿再试试？');
+        });
+    }
+}
+</script>
+{% endblock %}

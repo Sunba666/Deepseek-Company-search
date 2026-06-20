@@ -1,0 +1,10 @@
+<div class="card">
+  <div class="card-body text-center">
+    <h3>{{ company }} 个性化匹配度</h3>
+    <div class="display-1">{{ score.score }}分</div>
+    <p>{{ score.recommendation }}</p>
+    <ul class="list-unstyled">
+      {% for d in score.details %}<li>{{ d }}</li>{% endfor %}
+    </ul>
+  </div>
+</div>

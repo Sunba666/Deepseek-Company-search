@@ -1,0 +1,158 @@
+<!--
+企业尽调报告 - 动态渲染模板
+根据后端返回的sources列表动态展示可用的数据源模块
+-->
+<div id="company-report" class="company-report">
+    <h4 class="report-title">
+        <i class="bi bi-search"></i> {{ query }} 企业尽调报告
+        {% if normalized_name and normalized_name != query %}
+        <small class="text-muted">({{ normalized_name }})</small>
+        {% endif %}
+    </h4>
+
+    <!-- ========== 数据源状态摘要 ========== -->
+    <div class="data-source-summary mb-3">
+        <div class="alert alert-light border">
+            <div class="d-flex justify-content-between align-items-center">
+                <small>
+                    <strong><i class="bi bi-bar-chart"></i> 数据源状态</strong>
+                    {% set available_count = sources|selectattr('available')|list|length %}
+                    {% set total_count = sources|length %}
+
+                    {% if available_count == total_count and total_count > 0 %}
+                        <span class="text-success"><i class="bi bi-check-circle"></i> 已完整获取 {{ total_count }} 个数据源的全部信息</span>
+                    {% elif available_count == 0 %}
+                        <span class="text-danger"><i class="bi bi-exclamation-triangle"></i> 数据源暂时都没拿到，可能是网络问题。待会再查一次看看。</span>
+                    {% else %}
+                        <span class="text-warning"><i class="bi bi-bar-chart"></i> 已获取 {{ available_count }}/{{ total_count }} 个数据源的信息</span>
+                    {% endif %}
+                </small>
+                <span class="badge bg-{{ 'success' if available_count == total_count else ('warning' if available_count > 0 else 'danger') }}">
+                    {{ available_count }}/{{ total_count }}
+                </span>
+            </div>
+
+            <!-- 各数据源可用性标签 -->
+            <div class="mt-2">
+                {% for source in sources %}
+                    {% if source.available %}
+                        <span class="badge bg-success me-1" title="{{ source.source_url if source.source_url else '已获取' }}">
+                            <i class="bi bi-check-circle"></i> {{ source.name }}
+                            {% if source.is_mock %}<small>(模拟数据)</small>{% endif %}
+                        </span>
+                    {% else %}
+                        <span class="badge bg-secondary me-1" title="{{ source.error_msg }}">
+                            ⛔ {{ source.name }}
+                        </span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- 不可用数据源的错误提示 -->
+            {% set unavailable_sources = sources|selectattr('available', 'equalto', false)|list %}
+            {% if unavailable_sources %}
+                <div class="mt-2 text-muted small">
+                    {% for source in unavailable_sources %}
+                        <div><i class="bi bi-exclamation-triangle"></i> {{ source.name }} 暂时不可用{% if source.error_msg %}：{{ source.error_msg }}{% endif %}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ========== 动态渲染每个可用数据源 ========== -->
+    {% set available_sources = sources|selectattr('available')|list %}
+
+    {% if available_sources|length > 0 %}
+
+        {% for source in available_sources %}
+            <div class="card mb-3 source-card" data-source="{{ source.id }}">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ source.name }}</strong>
+                        {% if source.is_mock %}
+                            <span class="badge bg-warning ms-2">模拟数据</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <span class="badge bg-info">数据源</span>
+                        {% if source.fetch_time %}
+                            <small class="text-muted ms-2">{{ source.fetch_time[:16] }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body source-content">
+                    <!-- 根据source.id决定渲染模板 -->
+                    {% if source.id == 'tianyacha' %}
+                        {% set entity = source.data %}
+                        {% include "partials/_entity_card.html" with context %}
+
+                    {% elif source.id == 'tavily' %}
+                        {% set sentiments = source.data.get("items") if source.data else [] %}
+                        {% set sentiment_count = source.data.get("count") if source.data else 0 %}
+                        {% include "partials/_sentiment_card.html" with context %}
+
+                    {% elif source.id == 'wenshu' %}
+                        {% set risks = source.data.get("items") if source.data else [] %}
+                        {% set risk_count = source.data.get("count") if source.data else 0 %}
+                        {% include "partials/_risk_card.html" with context %}
+
+                    {% elif source.id == 'salary' %}
+                        {% set salary_data = source.data %}
+                        {% include "partials/_salary_card.html" with context %}
+
+                    {% elif source.id == 'reputation' %}
+                        {% set reputation_data = source.data %}
+                        {% include "partials/_reputation_card.html" with context %}
+
+                    {% elif source.id == 'interview' %}
+                        {% set interview_data = source.data %}
+                        {% include "partials/_interview_card.html" with context %}
+
+                    {% elif source.id == 'deepseek' %}
+                        {% set ai_analysis = source.data %}
+                        {% include "partials/_ai_analysis_card.html" with context %}
+
+                    {% else %}
+                        <div class="alert alert-info">
+                            未知数据类型: {{ source.id }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+
+    {% else %}
+        <!-- 所有数据源都不可用 -->
+        <div class="alert alert-warning">
+            <h5><i class="bi bi-exclamation-triangle"></i> 暂时没查到这家公司的数据</h5>
+            <p>可能的原因：公司名称不准确、太新、或者我们的数据源还没覆盖到。试试搜全称或换几个关键词。</p>
+            <p>请检查以下可能的原因：</p>
+            <ul>
+                <li>网络连接是否正常</li>
+                <li>API服务是否可用</li>
+                <li>是否配置了必要的API Key</li>
+            </ul>
+            <p class="mb-0">
+                <small class="text-muted">
+                    您可以：
+                    <a href="/" class="alert-link">刷新页面</a> 或
+                    <a href="/api/api-status" target="_blank" class="alert-link">查看API状态</a>
+                </small>
+            </p>
+        </div>
+    {% endif %}
+
+    <!-- ========== 数据来源追溯 ========== -->
+    <div class="mt-4 p-3 bg-light rounded">
+        <small class="text-muted">
+            <strong>📌 数据说明</strong><br>
+            <ul class="mb-0 small">
+                <li>以上信息来源于公开数据聚合，仅供参考</li>
+                <li>数据源状态实时更新，显示的徽章表示各数据源的可用性</li>
+                <li>如需更详细的数据，建议访问各数据源官网查询</li>
+                <li>模拟数据仅供开发测试使用，实际使用时请配置真实API</li>
+            </ul>
+        </small>
+    </div>
+</div>

@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}AI 深度分析 - {{ analysis.company_name }}{% endblock %}
+
+{% block content %}
+<div class="analysis-container">
+    <h2><i class="bi bi-robot"></i> AI 深度分析报告</h2>
+    <p class="text-muted">公司: {{ analysis.company_full_name | default(analysis.company_name) }} ({{ analysis.company_name }})</p>
+    <p class="text-small text-info">分析时间: {{ analysis.analysis_time | default('N/A') }}</p>
+
+    <div id="analysis-result">
+        {% if analysis and not analysis.error %}
+        <div class="analysis-card">
+            <!-- 公司概述 -->
+            <div class="overview-section mb-4">
+                <h4><i class="bi bi-journal-text"></i> 公司概述</h4>
+                <p class="lead">{{ analysis.overview }}</p>
+            </div>
+
+            <!-- 业务前景 -->
+            {% if analysis.business_prospects %}
+            <div class="section-card mb-3">
+                <h4><i class="bi bi-briefcase"></i> 业务前景分析</h4>
+                <p>{{ analysis.business_prospects }}</p>
+            </div>
+            {% endif %}
+
+            <!-- 工作体验 -->
+            {% if analysis.work_experience %}
+            <div class="section-card mb-3">
+                <h4>👔 员工真实工作体验</h4>
+                <p>{{ analysis.work_experience }}</p>
+            </div>
+            {% endif %}
+
+            <!-- 职业前景 -->
+            {% if analysis.career_prospects %}
+            <div class="section-card mb-3">
+                <h4><i class="bi bi-graph-up"></i> 职业发展前景</h4>
+                <p>{{ analysis.career_prospects }}</p>
+            </div>
+            {% endif %}
+
+            <!-- 薪资竞争力 -->
+            {% if analysis.salary_analysis %}
+            <div class="section-card mb-3">
+                <h4><i class="bi bi-cash-stack"></i> 薪资竞争力分析</h4>
+                <p>{{ analysis.salary_analysis }}</p>
+            </div>
+            {% endif %}
+
+            <!-- 适合人群 -->
+            {% if analysis.suitable_candidates %}
+            <div class="section-card mb-3">
+                <h4><i class="bi bi-people"></i> 适合加入的人群</h4>
+                <p>{{ analysis.suitable_candidates }}</p>
+            </div>
+            {% endif %}
+
+            <!-- 风险警告 -->
+            {% if analysis.risk_warnings and analysis.risk_warnings|length > 0 %}
+            <div class="section-card mb-3 border-warning">
+                <h4 class="text-warning"><i class="bi bi-exclamation-triangle"></i> 风险提示</h4>
+                <ul>
+                    {% for warning in analysis.risk_warnings %}
+                    <li>{{ warning }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- 求职建议 -->
+            {% if analysis.recommendations and analysis.recommendations|length > 0 %}
+            <div class="section-card mb-3">
+                <h4><i class="bi bi-lightbulb"></i> 求职建议</h4>
+                <ul>
+                    {% for rec in analysis.recommendations %}
+                    <li>{{ rec }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- 双方视角分析 -->
+            {% if analysis.perspective_analysis %}
+            <div class="dual-perspective">
+                <!-- 求职者视角 -->
+                <div class="perspective-card jobseeker">
+                    <h3>👤 求职者视角</h3>
+                    
+                    <div class="perspective-content">
+                        {% if analysis.perspective_analysis.from_candidate %}
+                        <div class="sub-section">
+                            <h4><i class="bi bi-check-circle"></i> 求职机会</h4>
+                            <ul>
+                                {% for opp in analysis.perspective_analysis.from_candidate.opportunities %}
+                                <li>{{ opp }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        {% if analysis.perspective_analysis.from_candidate.concerns %}
+                        <div class="sub-section">
+                            <h4><i class="bi bi-x-circle"></i> 关注点</h4>
+                            <ul>
+                                {% for concern in analysis.perspective_analysis.from_candidate.concerns %}
+                                <li>{{ concern }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 公司视角 -->
+                <div class="perspective-card company">
+                    <h3><i class="bi bi-building"></i> 公司视角</h3>
+                    
+                    <div class="perspective-content">
+                        {% if analysis.perspective_analysis.from_company %}
+                        <div class="sub-section">
+                            <h4><i class="bi bi-shield-check"></i> 公司优势</h4>
+                            <ul>
+                                {% for strength in analysis.perspective_analysis.from_company.strengths %}
+                                <li>{{ strength }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        {% if analysis.perspective_analysis.from_company.concerns %}
+                        <div class="sub-section">
+                            <h4><i class="bi bi-search"></i> 公司关注点</h4>
+                            <ul>
+                                {% for concern in analysis.perspective_analysis.from_company.concerns %}
+                                <li>{{ concern }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 技能要求 -->
+            {% if analysis.skill_requirements and analysis.skill_requirements|length > 0 %}
+            <div class="skills-section">
+                <h3>🎓 技能要求</h3>
+                <div class="skills-grid">
+                    <div class="skill-card core">
+                        <h4><i class="bi bi-lightning"></i> 核心技能</h4>
+                        <ul>
+                            {% for skill in analysis.skill_requirements %}
+                            <li>{{ skill }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 综合建议 -->
+            <div class="final-advice">
+                <h3><i class="bi bi-file-text"></i> 综合评价</h3>
+                <div class="advice-content p-3 rounded">
+                    {% if analysis.work_experience %}
+                    <p><strong>工作体验：</strong>{{ analysis.work_experience }}</p>
+                    {% endif %}
+                    {% if analysis.career_prospects %}
+                    <p><strong>发展前景：</strong>{{ analysis.career_prospects }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% elif analysis and analysis.error %}
+        <div class="alert alert-danger">{{ analysis.error }}</div>
+        {% else %}
+        <div class="alert alert-warning">分析没跑通，可能是数据源暂时挂了。换个公司试试，或者稍后再来。</div>
+        {% endif %}
+    </div>
+
+    <div class="action-buttons mt-4">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">返回公司查询</a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">返回首页</a>
+    </div>
+</div>
+
+<style>
+.section-card {
+    padding: 1rem;
+    
+    background: var(var(--bg-alt));
+    border-radius: 0.25rem;
+    color: var(var(--ink));
+}
+.section-card.border-warning {
+    
+    background: rgba(255, 193, 7, 0.1);
+}
+.advice-content {
+    background: var(var(--bg-alt));
+    color: var(var(--ink));
+}
+</style>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% if result and result.error %}
+{% include 'partials/error_alert.html' %}
+{% elif result %}
+<div class="alert alert-success mb-4">
+  <h4 class="mb-1"><i class="bi bi-trophy"></i> 最优选择：{{ result.winner }}</h4>
+  <p class="mb-0">{{ result.reason }}</p>
+</div>
+<table class="table table-striped mb-4">
+  <thead>
+    <tr><th>公司</th><th>综合评分</th><th>优点</th><th>缺点</th></tr>
+  </thead>
+  <tbody>
+    {% for offer in result.comparison %}
+    <tr>
+      <td>{{ offer.name }}</td>
+      <td>{{ offer.score }}分</td>
+      <td>{% for p in offer.pros %}<span class="badge bg-success me-1">{{ p }}</span>{% endfor %}</td>
+      <td>{% for c in offer.cons %}<span class="badge bg-danger me-1">{{ c }}</span>{% endfor %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<div class="card card-body mb-3">
+  <h5><i class="bi bi-chat-quote"></i> 谈判建议</h5>
+  <ul class="mb-0">{% for tip in result.negotiation_tips %}<li>{{ tip }}</li>{% endfor %}</ul>
+</div>
+<div class="p-3 bg-light rounded">
+  <h5><i class="bi bi-journal-text"></i> 综合总结</h5>
+  <p class="mb-0">{{ result.summary }}</p>
+</div>
+{% endif %}

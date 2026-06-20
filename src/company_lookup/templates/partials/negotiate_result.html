@@ -1,0 +1,22 @@
+{% if result and result.error %}
+{% include 'partials/error_alert.html' %}
+{% elif result %}
+<div class="alert alert-info mb-4">
+  <h4 class="mb-0"><i class="bi bi-cash-stack"></i> 建议薪资区间</h4>
+  <p class="mb-0">{{ result.salary_range }}</p>
+</div>
+<div class="card card-body mb-4">
+  <h5><i class="bi bi-file-text"></i> 谈判话术模板</h5>
+  {% for script in result.scripts %}
+  <div class="p-3 bg-light rounded mb-2">{{ script }}</div>
+  {% endfor %}
+</div>
+<div class="mb-4">
+  <h5>🎁 可争取的福利组合</h5>
+  <ul>{% for benefit in result.benefits %}<li>{{ benefit }}</li>{% endfor %}</ul>
+</div>
+<div class="card card-body">
+  <h5><i class="bi bi-lightbulb"></i> 谈判要点</h5>
+  <ul class="mb-0">{% for tip in result.tips %}<li>{{ tip }}</li>{% endfor %}</ul>
+</div>
+{% endif %}

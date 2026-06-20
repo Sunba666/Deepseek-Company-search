@@ -1,0 +1,59 @@
+<div class="reputation-section">
+    {% if data and data.overall_rating %}
+    <h4><i class="bi bi-chat-quote"></i> 员工口碑</h4>
+    
+    <div class="rating-display">
+        <div class="rating-circle">
+            <span class="rating-number">{{ data.overall_rating }}</span>
+            <span class="rating-label">综合评分</span>
+        </div>
+        <div class="rating-details">
+            <div class="rating-item">
+                <span>推荐率</span>
+                <span>{{ data.recommendation_rate }}</span>
+            </div>
+            <div class="rating-item">
+                <span>CEO认可度</span>
+                <span>{{ data.ceo_approval_rate }}</span>
+            </div>
+        </div>
+    </div>
+
+    {% if data.pros and data.pros is iterable %}
+    <div class="pros-cons-grid">
+        <div class="pros-card">
+            <h5><i class="bi bi-hand-thumbs-up"></i> 好评点</h5>
+            <ul>
+                {% for pro in data.pros[:5] %}
+                <li>{{ pro }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        {% if data.cons and data.cons is iterable %}
+        <div class="cons-card">
+            <h5><i class="bi bi-hand-thumbs-down"></i> 差评点</h5>
+            <ul>
+                {% for con in data.cons[:5] %}
+                <li>{{ con }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if data.culture_keywords and data.culture_keywords is iterable %}
+    <div class="culture-tags">
+        <h5>🏷️ 企业文化标签</h5>
+        {% for keyword in data.culture_keywords[:6] %}
+        <span class="culture-tag">{{ keyword }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty-state">
+        <p>暂无口碑数据</p>
+    </div>
+    {% endif %}
+</div>

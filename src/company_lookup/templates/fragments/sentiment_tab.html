@@ -1,0 +1,90 @@
+<!--
+网络舆情模块 - 第二层数据
+显示来自搜索API的员工评价、薪资爆料等，每条数据必须显示来源链接
+-->
+<div class="sentiment-section" id="sentiment-section">
+    <h3>🗣️ 网络口碑</h3>
+
+    {% if sentiments and sentiments|length > 0 %}
+    <div class="confidence-warning">
+        <span class="warning-icon"><i class="bi bi-exclamation-triangle"></i></span>
+        <span class="warning-text">以下数据来自网络用户自行爆料，官方未证实，仅供参考</span>
+    </div>
+
+    <div class="sentiment-filters">
+        <button class="filter-btn active" data-filter="all">全部 ({{ sentiments|length }})</button>
+        <button class="filter-btn" data-filter="salary">薪资 ({{ sentiments|selectattr('category', 'equalto', 'salary')|list|length }})</button>
+        <button class="filter-btn" data-filter="review">评价 ({{ sentiments|selectattr('category', 'equalto', 'review')|list|length }})</button>
+        <button class="filter-btn" data-filter="layoff">裁员 ({{ sentiments|selectattr('category', 'equalto', 'layoff')|list|length }})</button>
+    </div>
+
+    <div class="sentiment-list">
+        {% for item in sentiments %}
+        <div class="sentiment-item category-{{ item.category }}" data-category="{{ item.category }}">
+            <div class="sentiment-header">
+                <span class="category-tag">{{ item.category }}</span>
+                <span class="sentiment-badge {{ item.sentiment }}">
+                    {% if item.sentiment == 'positive' %}<i class="bi bi-hand-thumbs-up"></i> 正面{% elif item.sentiment == 'negative' %}<i class="bi bi-hand-thumbs-down"></i> 负面{% else %}😐 中性{% endif %}
+                </span>
+                <span class="confidence-tag confidence-{{ item.confidence.value }}">
+                    {% if item.confidence.value == 'high' %}高置信度{% elif item.confidence.value == 'medium' %}中置信度{% else %}低置信度（用户爆料）{% endif %}
+                </span>
+            </div>
+
+            <div class="sentiment-content">
+                <h4 class="sentiment-title">{{ item.title }}</h4>
+                <p class="sentiment-summary">{{ item.summary }}</p>
+
+                {% if item.mentioned_salary %}
+                <div class="mentioned-salary">
+                    <span class="salary-icon"><i class="bi bi-cash-stack"></i></span>
+                    <span>提及薪资: {{ item.mentioned_salary }}</span>
+                </div>
+                {% endif %}
+
+                {% if item.mentioned_pros %}
+                <div class="mentioned-pros">
+                    <span class="label">优点:</span>
+                    {% for pro in item.mentioned_pros %}
+                    <span class="tag pro">{{ pro }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if item.mentioned_cons %}
+                <div class="mentioned-cons">
+                    <span class="label">缺点:</span>
+                    {% for con in item.mentioned_cons %}
+                    <span class="tag con">{{ con }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="sentiment-footer">
+                <div class="source-info">
+                    <span class="source-name">{{ item.source_name }}</span>
+                    {% if item.publish_date %}
+                    <span class="publish-date">{{ item.publish_date }}</span>
+                    {% endif %}
+                </div>
+                {% if item.url %}
+                <a href="{{ item.url }}" target="_blank" class="source-link">
+                    📎 原文链接
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="confidence-note">
+                <small>{{ item.confidence_note }}</small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <p>暂无网络舆情数据</p>
+    </div>
+    {% endif %}
+</div>

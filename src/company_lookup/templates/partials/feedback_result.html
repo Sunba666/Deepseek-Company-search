@@ -1,0 +1,45 @@
+{% if status == 'verified' %}
+<div class="alert alert-success mt-3">
+    <strong><i class="bi bi-check-circle"></i> 验证通过！</strong>
+    <p class="mt-1">「{{ company_name }}」已确认存在，已收录至系统记忆库。</p>
+    {% if info %}
+    <p class="text-muted small mt-1">{{ info.get('known_info', '') }}</p>
+    <p class="text-muted small">信心度：{{ info.get('confidence', 'medium') }} | 来源：用户反馈 + AI 验证</p>
+    {% endif %}
+    <button class="btn btn-sm btn-outline-primary mt-2"
+            hx-post="/company/search"
+            hx-vals='{"company_name": "{{ company_name }}"}'
+            hx-target="#report-result">
+        查询「{{ company_name }}」
+    </button>
+</div>
+
+{% elif status == 'pending' %}
+<div class="alert alert-warning mt-3">
+    <strong>⏳ 已提交审核</strong>
+    <p class="mt-1">「{{ company_name }}」的反馈已收到，AI 未能完全确认。</p>
+    <p class="text-muted small">原因：{{ reason }}</p>
+    <p class="text-muted small">管理员将人工复核，复核通过后即可查询。</p>
+</div>
+
+{% elif status == 'already_known' %}
+<div class="alert alert-info mt-3">
+    <strong><i class="bi bi-check-circle"></i> 该公司已收录</strong>
+    <p class="mt-1">「{{ company_name }}」已在系统记忆库中。</p>
+    {% if info %}
+    <p class="text-muted small mt-1">{{ info.get('known_info', '') }}</p>
+    {% endif %}
+    <button class="btn btn-sm btn-outline-primary mt-2"
+            hx-post="/company/search"
+            hx-vals='{"company_name": "{{ company_name }}"}'
+            hx-target="#report-result">
+        查询「{{ company_name }}」
+    </button>
+</div>
+
+{% else %}
+<div class="alert alert-danger mt-3">
+    <strong><i class="bi bi-x-circle"></i> 提交失败</strong>
+    <p class="mt-1">{{ message }}</p>
+</div>
+{% endif %}

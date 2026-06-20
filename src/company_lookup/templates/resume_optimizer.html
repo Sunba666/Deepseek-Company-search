@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4"><i class="bi bi-file-earmark"></i> 简历优化器</h1>
+    <p class="text-center text-muted mb-6">AI帮你优化简历，匹配目标公司</p>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-file-text"></i> 输入信息</h5>
+                </div>
+                <div class="card-body">
+                    <!-- 图片上传区域 -->
+                    <div class="mb-4">
+                        <label class="form-label">📷 上传简历图片</label>
+                        <input type="file" id="resumeImage" class="form-control" accept=".pdf,.docx,.txt" onchange="handleImageUpload(event)">
+                        
+                        <div id="ocrLoading" class="text-center mt-2" style="display: none;">
+                            <div class="loading-spinner"></div>
+                            <span>正在识别简历内容...</span>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <form method="POST" action="/resume-optimizer" id="resumeForm">
+                        <div class="mb-3">
+                            <label>简历内容（可手动输入或上传图片自动识别）</label>
+                            <textarea name="resume_text" id="resumeText" class="form-control" rows="8" placeholder="把你的简历粘贴到这里，或者截图后上传图片让AI识别…"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label>目标公司</label>
+                            <input type="text" name="company_name" class="form-control" placeholder="例如：阿里巴巴">
+                        </div>
+                        <div class="mb-3">
+                            <label>职位描述（可选）</label>
+                            <textarea name="job_description" class="form-control" rows="3" placeholder="粘贴职位描述..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="analyzeBtn">
+    <span id="analyzeBtnText">开始优化</span>
+    <span id="analyzeSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-crosshair"></i> 优化建议</h5>
+                </div>
+                <div class="card-body">
+                    {% if result and not result.error %}
+                        <!-- 匹配度 -->
+                        <div class="alert alert-info mb-4">
+                            <h4><i class="bi bi-bar-chart"></i> 岗位匹配度：{{ result.match_score }}%</h4>
+                        </div>
+
+                        <!-- 关键词建议 -->
+                        <div class="mb-4">
+                            <h5><i class="bi bi-key"></i> 关键词优化建议</h5>
+                            <div class="flex flex-wrap gap-2">
+                                {% for keyword in result.keywords %}
+                                <span class="badge bg-primary">{{ keyword }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- 改进建议 -->
+                        <div class="border p-4 rounded mb-4">
+                            <h5><i class="bi bi-lightbulb"></i> 改进建议</h5>
+                            <ul>
+                                {% for suggestion in result.suggestions %}
+                                <li>{{ suggestion }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+
+                        <!-- 求职信 -->
+                        <div class="border p-4 rounded">
+                            <h5>📧 求职信（Cover Letter）</h5>
+                            <textarea class="form-control" rows="8" readonly>{{ result.cover_letter }}</textarea>
+                            <button class="btn btn-secondary mt-2" onclick="copyCoverLetter()">复制求职信</button>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8">
+                            <p class="text-muted">请在左侧输入简历内容或上传简历图片进行分析</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let isSubmitting = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('resumeForm');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const analyzeBtnText = document.getElementById('analyzeBtnText');
+    const analyzeSpinner = document.getElementById('analyzeSpinner');
+    const resumeText = document.getElementById('resumeText');
+    
+    form.addEventListener('submit', function(e) {
+        if (isSubmitting) {
+            e.preventDefault();
+            return;
+        }
+        
+        // 验证简历内容不为空
+        if (!resumeText.value.trim()) {
+            e.preventDefault();
+            resumeText.classList.add('border-danger');
+            showAlert('请输入简历内容', 'warning');
+            
+            // 3秒后移除高亮
+            setTimeout(() => {
+                resumeText.classList.remove('border-danger');
+            }, 3000);
+            return;
+        }
+        
+        // 显示加载状态
+        isSubmitting = true;
+        analyzeBtn.disabled = true;
+        analyzeBtnText.textContent = '优化中…';
+        analyzeSpinner.classList.remove('d-none');
+    });
+});
+
+function showAlert(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.card-body').prepend(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // 显示预览
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('previewImg').src = e.target.result;
+        document.getElementById('imagePreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+    
+    // 发送到服务器进行文档解析
+    document.getElementById('ocrLoading').style.display = 'block';
+    
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    fetch('/api/ocr-resume', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('ocrLoading').style.display = 'none';
+        
+        if (data.error) {
+            showAlert('识别失败: ' + data.error, 'danger');
+            return;
+        }
+        
+        // 将识别结果填入文本框
+        document.getElementById('resumeText').value = data.text || '';
+        showAlert('简历识别成功！', 'success');
+    })
+    .catch(error => {
+        document.getElementById('ocrLoading').style.display = 'none';
+        console.error('Error:', error);
+        showAlert('识别失败，请稍后重试', 'danger');
+    });
+}
+
+function clearImage() {
+    document.getElementById('resumeImage').value = '';
+    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('previewImg').src = '';
+}
+
+function copyCoverLetter() {
+    const result = {{ result|tojson|safe if result else '{}' }};
+    if (result.cover_letter) {
+        navigator.clipboard.writeText(result.cover_letter).then(() => {
+            showAlert('求职信已复制到剪贴板！', 'success');
+        });
+    }
+}
+</script>
+<style>
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #409EFF;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}

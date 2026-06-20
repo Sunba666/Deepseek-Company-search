@@ -1,0 +1,39 @@
+<div class="salary-section">
+    {% if data and data.avg_monthly %}
+    <h4><i class="bi bi-cash-stack"></i> 薪酬福利</h4>
+    
+    <div class="salary-grid">
+        <div class="salary-item">
+            <span class="salary-label">平均月薪</span>
+            <span class="salary-value">{{ data.avg_monthly }}</span>
+        </div>
+        <div class="salary-item">
+            <span class="salary-label">薪资范围</span>
+            <span class="salary-value">{{ data.salary_range }}</span>
+        </div>
+        <div class="salary-item">
+            <span class="salary-label">年终奖金</span>
+            <span class="salary-value">{{ data.year_end_bonus }}</span>
+        </div>
+        <div class="salary-item">
+            <span class="salary-label">调薪频率</span>
+            <span class="salary-value">{{ data.salary_adjustment }}</span>
+        </div>
+    </div>
+
+    {% if data.benefits and data.benefits is iterable %}
+    <div class="benefits-list">
+        <h5>🎁 福利项目</h5>
+        <div class="benefits-tags">
+            {% for benefit in data.benefits[:5] %}
+            <span class="benefit-tag">{{ benefit }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty-state">
+        <p>暂无薪酬数据</p>
+    </div>
+    {% endif %}
+</div>

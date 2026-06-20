@@ -1,0 +1,15 @@
+{% macro spinner(id='spinner', text='加载中...') %}
+<div id="{{ id }}" class="htmx-indicator text-center py-4">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">{{ text }}</span>
+  </div>
+  <p class="text-muted mt-2 mb-0">{{ text }}</p>
+</div>
+{% endmacro %}
+
+{% macro submit_button(label='提交', indicator='spinner') %}
+<button type="submit" class="btn btn-gradient px-4">
+  <span class="submit-label">{{ label }}</span>
+  <span class="spinner-border spinner-border-sm htmx-indicator ms-2" role="status"></span>
+</button>
+{% endmacro %}

@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+{% from "macros.html" import spinner %}
+
+{% block title %}公司尽调仪表盘{% endblock %}
+
+{% block content %}
+<div class="dashboard-search mb-4">
+    <form id="dashboard-search-form"
+          hx-post="{{ url_for('company.dashboard_search') }}"
+          hx-target="#dashboard-area"
+          hx-swap="innerHTML"
+          hx-indicator="#dashboard-spinner"
+          class="search-form">
+        <div class="input-group input-group-lg">
+            <span class="input-group-text bg-secondary-custom border-end-0">
+                <i class="bi bi-search"></i>
+            </span>
+            <input type="text" name="query" id="searchInput" class="form-control border-start-0"
+                   placeholder="搜公司，比如 腾讯、米哈游…"
+                   value="{{ company or '' }}" required autocomplete="off">
+            <button class="btn btn-gradient px-4" type="submit">查询</button>
+            {% if company %}
+            <button type="button" class="btn btn-outline-secondary"
+                    hx-post="{{ url_for('company.dashboard_search') }}"
+                    hx-target="#dashboard-area"
+                    hx-indicator="#dashboard-spinner"
+                    hx-vals='{"query": "{{ company }}"}'>
+                <i class="bi bi-arrow-clockwise"></i> 刷新
+            </button>
+            {% endif %}
+        </div>
+    </form>
+    {{ spinner('dashboard-spinner', '正在加载公司数据...') }}
+</div>
+
+<div id="dashboard-area">
+{% if invalid_entity %}
+{% with query=company %}{% include 'partials/invalid_company.html' %}{% endwith %}
+{% elif error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% elif data %}
+{% include 'partials/dashboard_tabs.html' %}
+{% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script>
+const companyData = {{ data|tojson|safe if data else '{}' }};
+const companyName = "{{ company or '' }}";
+
+// 综合评分已在服务端计算并显示，无需客户端计算
+let aiAnalysisLoaded = false;
+
+function loadAIAnalysis() {
+    if (aiAnalysisLoaded) return;
+    aiAnalysisLoaded = true;
+    
+    const aiResult = document.getElementById('ai-result');
+    const aiLoading = document.getElementById('ai-loading');
+    
+    if (!aiResult || !aiLoading) return;
+    
+    // 显示加载状态
+    aiResult.innerHTML = '';
+    aiLoading.style.display = 'block';
+    
+    fetch('/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'query=' + encodeURIComponent(companyName)
+    })
+    .then(response => response.text())
+    .then(html => {
+        aiResult.innerHTML = html;
+        aiLoading.style.display = 'none';
+    })
+    .catch(error => {
+        console.error('AI分析加载失败:', error);
+        aiResult.innerHTML = '<div class="alert alert-danger">AI分析加载失败，请手动点击"重新生成AI分析"按钮</div>';
+        aiLoading.style.display = 'none';
+        aiAnalysisLoaded = false; // 允许重试
+    });
+}
+
+function refreshDashboard() {
+    if (!companyName) return;
+    
+    const refreshBtn = document.getElementById('refreshBtn');
+    const refreshIcon = document.getElementById('refreshIcon');
+    const tabContent = document.getElementById('tabContent');
+    
+    refreshIcon.style.animation = 'spin 1s linear infinite';
+    refreshBtn.disabled = true;
+    
+    fetch('/api/refresh-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company_name: companyName })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert('刷新失败: ' + data.error);
+            return;
+        }
+        // 更新页面数据
+        location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('刷新失败，请稍后重试');
+    })
+    .finally(() => {
+        refreshIcon.style.animation = '';
+        refreshBtn.disabled = false;
+    });
+}
+
+document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+        
+        if (this.getAttribute('href') === '#radar') {
+            setTimeout(initRadarChart, 100);
+        }
+        
+        if (this.getAttribute('href') === '#ai') {
+            loadAIAnalysis();
+        }
+    });
+});
+
+function initRadarChart() {
+    const chartDom = document.getElementById('radar-chart');
+    if (!chartDom) return;
+    
+    const myChart = echarts.init(chartDom);
+    
+    fetch('/api/radar-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company_data: companyData })
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('网络请求失败');
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (!data || typeof data !== 'object') {
+            chartDom.innerHTML = '<div class="alert alert-warning text-center py-4">无法加载雷达图数据</div>';
+            return;
+        }
+        
+        if (!data.dimensions || !data.values || !Array.isArray(data.dimensions) || !Array.isArray(data.values)) {
+            chartDom.innerHTML = '<div class="alert alert-warning text-center py-4">数据格式不正确</div>';
+            return;
+        }
+        
+        const indicators = data.dimensions.map(name => ({ name: name, max: 100 }));
+        
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const titleColor = isDark ? '#F5F5F4' : '#333';
+        const axisColor = isDark ? '#57534E' : '#e5e7eb';
+        const areaColor1 = isDark ? '#292524' : '#f9fafb';
+        const areaColor2 = isDark ? '#1C1917' : '#ffffff';
+        
+        const option = {
+            title: { 
+                text: companyName + ' 风险评估', 
+                left: 'center',
+                textStyle: { color: titleColor, fontSize: 16, fontWeight: 'bold' }
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: function(params) {
+                    return params.name + ': ' + params.value + '分';
+                }
+            },
+            radar: {
+                indicator: indicators,
+                shape: 'polygon',
+                splitNumber: 5,
+                axisName: { color: titleColor, fontSize: 12 },
+                splitLine: { lineStyle: { color: axisColor } },
+                splitArea: { areaStyle: { color: [areaColor1, areaColor2] } },
+                axisLine: { lineStyle: { color: axisColor } }
+            },
+            series: [{
+                type: 'radar',
+                data: [{
+                    value: data.values,
+                    name: companyName,
+                    areaStyle: { color: 'rgba(102, 126, 234, 0.3)' },
+                    lineStyle: { color: '#EA580C', width: 2 },
+                    itemStyle: { color: '#EA580C' }
+                }]
+            }]
+        };
+        
+        myChart.setOption(option);
+        
+        // 响应窗口大小变化
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        });
+    })
+    .catch(error => {
+        console.error('Radar Chart Error:', error);
+        chartDom.innerHTML = '<div class="alert alert-danger text-center py-4">雷达图加载失败，请刷新重试</div>';
+    });
+}
+
+function generateQuestions() {
+    const btn = document.getElementById('generateQuestionsBtn');
+    const resultDiv = document.getElementById('interview-questions-result');
+    
+    if (!btn || !resultDiv) {
+        console.error('按钮或结果容器未找到');
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = '生成中...';
+    resultDiv.innerHTML = '<div class="text-center py-4"><div class="loading-spinner"></div><span class="d-block mt-2">AI正在生成面试题...</span></div>';
+    
+    if (!companyName || companyName.trim() === '') {
+        resultDiv.innerHTML = '<div class="alert alert-warning text-center py-4">请先查询公司信息</div>';
+        btn.disabled = false;
+        btn.textContent = '生成预测题';
+        return;
+    }
+    
+    fetch('/api/interview-questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company_name: companyName, job_type: '软件工程师' })
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('网络请求失败');
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (!data || typeof data !== 'object') {
+            resultDiv.innerHTML = '<div class="alert alert-danger text-center py-4">返回数据格式错误</div>';
+            return;
+        }
+        
+        if (data.error) {
+            resultDiv.innerHTML = `<div class="alert alert-danger text-center py-4">${data.error}</div>`;
+            return;
+        }
+        
+        let html = '<div class="border p-4 rounded-lg bg-secondary-custom shadow-sm">';
+
+        if (data.questions && data.questions.length > 0) {
+            html += '<h6 class="text-primary-custom font-bold mb-4"><i class="bi bi-crosshair"></i> 预测面试题</h6>';
+            data.questions.forEach((q, i) => {
+                if (typeof q === 'object') {
+                    html += `<div class="card card-body mb-3 p-3" style="background: var(--primary-subtle); border: 1px solid var(--primary-light);">
+                        <strong class="text-primary">${i+1}. ${q.question || '未知问题'}</strong>
+                        <div class="text-muted small mt-1">${q.category || '综合'} - ${q.difficulty || '中等'}</div>
+                        <div class="mt-2 text-success" style="color: var(--success) !important;"><strong>参考回答：</strong>${q.answer || '请结合自身经验准备'}</div>
+                    </div>`;
+                } else if (typeof q === 'string') {
+                    html += `<div class="card card-body mb-3 p-3" style="background: var(--primary-subtle); border: 1px solid var(--primary-light);">
+                        <strong class="text-primary">${i+1}. ${q}</strong>
+                        <div class="mt-2 text-success" style="color: var(--success) !important;"><strong>参考回答：</strong>请结合自身经验准备</div>
+                    </div>`;
+                }
+            });
+        } else {
+            html += '<div class="alert alert-info text-center py-3">暂无面试题数据</div>';
+        }
+        
+        if (data.suggestions && data.suggestions.length > 0) {
+            html += '<h6 class="text-primary-custom font-bold mt-4 mb-3"><i class="bi bi-lightbulb"></i> 准备建议</h6>';
+            html += '<ul class="list-group">';
+            data.suggestions.forEach((s, i) => {
+                html += `<li class="list-group-item border-0 bg-secondary-custom rounded mb-2 text-primary-custom">${i+1}. ${s}</li>`;
+            });
+            html += '</ul>';
+        }
+        
+        html += '</div>';
+        resultDiv.innerHTML = html;
+        document.getElementById('mock-interview-section')?.style.display = 'block';
+    })
+    .catch(error => {
+        console.error('Generate Questions Error:', error);
+        resultDiv.innerHTML = '<div class="alert alert-danger text-center py-4">报告生成出了点问题，刷新一下页面再试试看</div>';
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = '生成预测题';
+    });
+}
+
+function submitAnswer() {
+    const answer = document.getElementById('answer-input').value;
+    if (!answer) {
+        alert('请输入你的回答');
+        return;
+    }
+    
+    const feedbackDiv = document.getElementById('answer-feedback');
+    feedbackDiv.innerHTML = '<div class="text-center"><div class="loading-spinner"></div><span>AI正在评估...</span></div>';
+    
+    fetch('/api/mock-interview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            question: document.querySelector('#current-question').textContent || '请描述你最有挑战性的项目',
+            answer: answer,
+            company_name: companyName
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            feedbackDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+            return;
+        }
+        
+        let html = `<div class="mt-2 p-3 border rounded bg-secondary-custom">`;
+        html += `<div class="mb-2"><strong class="text-primary-custom">评分:</strong> <span class="badge bg-${data.score >= 70 ? 'success' : data.score >= 50 ? 'warning' : 'danger'}">${data.score || '--'}/100</span></div>`;
+        if (data.evaluation) {
+            html += `<div class="mb-2"><strong>评价:</strong> ${data.evaluation}</div>`;
+        }
+        if (data.strengths && data.strengths.length > 0) {
+            html += `<div class="mb-2"><strong>优点:</strong> ${data.strengths.join(', ')}</div>`;
+        }
+        if (data.weaknesses && data.weaknesses.length > 0) {
+            html += `<div class="mb-2"><strong>改进:</strong> ${data.weaknesses.join(', ')}</div>`;
+        }
+        if (data.suggestions && data.suggestions.length > 0) {
+            html += `<div class="mb-2"><strong>建议:</strong> ${data.suggestions.join(', ')}</div>`;
+        }
+        html += `</div>`;
+        feedbackDiv.innerHTML = html;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        feedbackDiv.innerHTML = '<div class="alert alert-danger">提交失败，请稍后重试</div>';
+    });
+}
+
+// 自动加载雷达图
+if (window.location.hash === '#radar') {
+    setTimeout(initRadarChart, 300);
+}
+</script>
+<style>
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #409EFF;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.question-item {
+    padding: 10px;
+    margin-bottom: 10px;
+    
+    background: var(var(--bg-alt));
+    color: var(var(--ink));
+}
+
+.answer-text {
+    margin-top: 5px;
+    padding-left: 10px;
+}
+</style>
+{% endblock %}

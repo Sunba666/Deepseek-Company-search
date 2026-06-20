@@ -1,0 +1,758 @@
+# -*- coding: utf-8 -*-
+"""Mock数据层框架"""
+
+import logging
+import uuid
+from datetime import datetime
+from typing import Dict, List, Optional
+from .dto import (EntityInfo, SentimentItem, RiskItem,
+    ConflictItem, DataSource, ConfidenceLevel)
+
+logger = logging.getLogger(__name__)
+
+
+class MockEntityData:
+    MOCK_DATA = {
+        "小米": {"company_name": "小米科技有限责任公司", "unified_credit_code": "91110108551385082Q", "legal_representative": "雷军", "registered_capital": "185000万美元", "establishment_date": "2010-03-03", "company_status": "存续", "company_type": "科技推广和应用服务业"},
+        "腾讯": {"company_name": "腾讯控股有限公司", "unified_credit_code": "914403007708814231", "legal_representative": "马化腾", "registered_capital": "65000万元人民币", "establishment_date": "1998-11-11", "company_status": "存续", "company_type": "互联网和相关服务"},
+        "阿里巴巴": {"company_name": "阿里巴巴集团控股有限公司", "unified_credit_code": "91330100MA27X03X9K", "legal_representative": "张勇", "registered_capital": "50740万美元", "establishment_date": "1999-06-25", "company_status": "存续", "company_type": "互联网和相关服务"},
+        "字节跳动": {"company_name": "北京字节跳动科技有限公司", "unified_credit_code": "91110108MA001YUC9", "legal_representative": "张利东", "registered_capital": "10000万元人民币", "establishment_date": "2012-03-09", "company_status": "存续", "company_type": "科技推广和应用服务业"},
+        "华为": {"company_name": "华为技术有限公司", "unified_credit_code": "914403001922038216", "legal_representative": "梁华", "registered_capital": "3990913.1213万元人民币", "establishment_date": "1987-09-15", "company_status": "存续", "company_type": "计算机、通信和其他电子设备制造业"},
+        "米哈游": {"company_name": "米哈游科技（上海）有限公司", "unified_credit_code": "91310112MA1GB8210W", "legal_representative": "刘伟", "registered_capital": "65000万元人民币", "establishment_date": "2013-12-25", "company_status": "存续", "company_type": "软件和信息技术服务业"},
+
+    "美团": {"company_name": "北京三快科技有限公司", "unified_credit_code": "", "legal_representative": "穆荣均", "registered_capital": "100000万元人民币", "establishment_date": "2007-04-10", "company_status": "存续", "company_type": "科技推广和应用服务业"},
+        "京东": {"company_name": "北京京东世纪贸易有限公司", "unified_credit_code": "", "legal_representative": "刘强东", "registered_capital": "134000万元人民币", "establishment_date": "2007-04-20", "company_status": "存续", "company_type": "零售业"},
+        "哔哩哔哩": {"company_name": "上海哔哩哔哩科技有限公司", "unified_credit_code": "", "legal_representative": "陈睿", "registered_capital": "10000万元人民币", "establishment_date": "2015-05-12", "company_status": "存续", "company_type": "科技推广和应用服务业"},
+    }
+
+    @classmethod
+    def get_entity(cls, company_name: str) -> Optional[EntityInfo]:
+        if company_name in cls.MOCK_DATA:
+            return cls._build_entity(cls.MOCK_DATA[company_name])
+        for key, data in cls.MOCK_DATA.items():
+            full = data.get("company_name", "")
+            if company_name in key or key in company_name or (full and (company_name in full or full in company_name)):
+                return cls._build_entity(data)
+        return None
+
+    @classmethod
+    def _build_entity(cls, data: Dict) -> EntityInfo:
+        return EntityInfo(
+            company_name=data.get("company_name", ""),
+            unified_credit_code=data.get("unified_credit_code", ""),
+            legal_representative=data.get("legal_representative", ""),
+            registered_capital=data.get("registered_capital", ""),
+            establishment_date=data.get("establishment_date", ""),
+            company_type=data.get("company_type", ""),
+            company_status=data.get("company_status", ""),
+            source=DataSource.MOCK,
+            fetch_time=datetime.now().isoformat(),
+            is_valid=True
+        )
+
+    @classmethod
+    def get_entity(cls, company_name: str) -> Optional[EntityInfo]:
+        if company_name in cls.MOCK_DATA:
+            return cls._build_entity(cls.MOCK_DATA[company_name])
+        for key, data in cls.MOCK_DATA.items():
+            full = data.get("company_name", "")
+            if company_name in key or key in company_name or (full and (company_name in full or full in company_name)):
+                return cls._build_entity(data)
+        return None
+
+    @classmethod
+    def _build_entity(cls, data: Dict) -> EntityInfo:
+        return EntityInfo(
+            company_name=data.get("company_name", ""),
+            unified_credit_code=data.get("unified_credit_code", ""),
+            legal_representative=data.get("legal_representative", ""),
+            registered_capital=data.get("registered_capital", ""),
+            establishment_date=data.get("establishment_date", ""),
+            company_type=data.get("company_type", ""),
+            company_status=data.get("company_status", ""),
+            source=DataSource.MOCK,
+            fetch_time=datetime.now().isoformat(),
+            is_valid=True
+        )
+
+class MockDataProvider:
+    @staticmethod
+    def get_entity(company_name: str) -> EntityInfo:
+        entity = MockEntityData.get_entity(company_name)
+        if entity:
+            return entity
+        return EntityInfo(company_name=company_name, is_valid=False,
+            error_message="Mock模式：未找到该公司数据",
+            source=DataSource.MOCK, fetch_time=datetime.now().isoformat())
+
+    @staticmethod
+    def get_sentiments(company_name: str):
+        if 'MockSentimentData' in globals():
+            return MockSentimentData.get_sentiments(company_name)
+        return []
+
+    @staticmethod
+    def get_risks(company_name: str):
+        if 'MockRiskData' in globals():
+            return MockRiskData.get_risks(company_name)
+        return []
+
+    @staticmethod
+    def is_mock_mode() -> bool:
+        import os
+        return not any([os.getenv("TIANYACHA_API_KEY"), os.getenv("TAVILY_API_KEY")])
+
+
+:
+    @staticmethod
+    def get_entity(company_name: str) -> EntityInfo:
+        entity = MockEntityData.get_entity(company_name)
+        if entity:
+            return entity
+        return EntityInfo(company_name=company_name, is_valid=False,
+            error_message="Mock模式：未找到该公司数据",
+            source=DataSource.MOCK, fetch_time=datetime.now().isoformat())
+
+    @staticmethod
+    def get_sentiments(company_name: str):
+        if 'MockSentimentData' in globals():
+            return MockSentimentData.get_sentiments(company_name)
+        return []
+
+    @staticmethod
+    def get_risks(company_name: str):
+        if 'MockRiskData' in globals():
+            return MockRiskData.get_risks(company_name)
+        return []
+
+    @staticmethod
+    def is_mock_mode() -> bool:
+        import os
+        return not any([os.getenv("TIANYACHA_API_KEY"), os.getenv("TAVILY_API_KEY")])
+
+
+class MockSentimentData:
+    MOCK_DATA = {
+    "\u5c0f\u7c73": [
+        {
+            "title": "\u5c0f\u7c73\u5458\u5de5\u5de5\u4f5c\u4f53\u9a8c",
+            "summary": "\u5c0f\u7c73\u5de5\u4f5c5\u5e74\u4e86\uff0c\u6574\u4f53\u611f\u89c9\u4e0d\u9519\u3002",
+            "source_name": "\u8109\u8109",
+            "publish_date": "2024-12-20",
+            "sentiment": "positive",
+            "mentioned_salary": "20k-45k",
+            "category": "review",
+            "mentioned_pros": [
+                "\u798f\u5229\u597d"
+            ],
+            "mentioned_cons": [
+                "\u52a0\u73ed\u591a"
+            ]
+        }
+    ],
+    "\u817e\u8baf": [
+        {
+            "title": "\u817e\u8baf\u5458\u5de5\u5de5\u4f5c\u4f53\u9a8c",
+            "summary": "\u5728\u817e\u8baf\u5de5\u4f5c3\u5e74\u4e86\uff0c\u6574\u4f53\u611f\u89c9\u4e0d\u9519\u3002",
+            "source_name": "\u8109\u8109",
+            "publish_date": "2024-12-15",
+            "sentiment": "positive",
+            "mentioned_salary": "25k-45k",
+            "category": "review",
+            "mentioned_pros": [
+                "\u798f\u5229\u597d"
+            ],
+            "mentioned_cons": [
+                "\u52a0\u73ed\u591a"
+            ]
+        }
+    ],
+    "字节跳动": [
+        {
+            "title": "字节跳动员工工作体验",
+            "summary": "在字节跳动工作的体验挺好的，学习机会多，升迁速度快。",
+            "source_name": "脉脉",
+            "publish_date": "2024-12-20",
+            "sentiment": "positive",
+            "mentioned_salary": "25k-55k",
+            "category": "review",
+            "mentioned_pros": ["升迁快"],
+            "mentioned_cons": ["加班多"]
+        }
+    ],
+    "\u7f8e\u56e2": [
+        {
+            "title": "\u7f8e\u56e2\u5de5\u4f5c\u4f53\u9a8c",
+            "summary": "\u7f8e\u56e2\u56e2\u961f\u5f88\u62fc\uff0c\u5e74\u7ec8\u5956\u770b\u7ee9\u6548\u3002",
+            "source_name": "\u8109\u8109",
+            "publish_date": "2024-12-05",
+            "sentiment": "neutral",
+            "mentioned_salary": "22k-40k",
+            "category": "review",
+            "mentioned_pros": [
+                "\u798f\u5229\u597d"
+            ],
+            "mentioned_cons": [
+                "\u52a0\u73ed\u591a"
+            ]
+        }
+    ],
+    "\u54d4\u54e9\u54d4\u54e9": [
+        {
+            "title": "B\u7ad9\u5de5\u4f5c\u4f53\u9a8c",
+            "summary": "B\u7ad9\u6c1b\u56f4\u5e74\u8f7b\u5316\uff0c\u4e8c\u6b21\u5143\u6587\u5316\u6d53\u539a\u3002",
+            "source_name": "\u77e5\u4e4e",
+            "publish_date": "2024-10-20",
+            "sentiment": "positive",
+            "mentioned_salary": "18k-35k",
+            "category": "review",
+            "mentioned_pros": [
+                "\u6c1b\u56f4\u597d"
+            ],
+            "mentioned_cons": [
+                "\u85aa\u8d44\u4e00\u822c"
+            ]
+        }
+    ]
+}
+
+    @classmethod
+    def get_sentiments(cls, company_name: str):
+        raw = cls.MOCK_DATA.get(company_name, [])
+        if not raw:
+            for key, data in cls.MOCK_DATA.items():
+                if company_name in key or key in company_name:
+                    raw = data
+                    break
+        result = []
+        for d in raw:
+            result.append(SentimentItem(
+                id=str(uuid.uuid4()), title=d.get("title",""),
+                summary=d.get("summary",""), content=d.get("summary",""),
+                source=DataSource.MOCK, source_name=d.get("source_name","网络"),
+                publish_date=d.get("publish_date",""), category=d.get("category","general"),
+                sentiment=d.get("sentiment","neutral"),
+                sentiment_score=1.0 if d.get("sentiment")=="positive" else -1.0 if d.get("sentiment")=="negative" else 0,
+                confidence=ConfidenceLevel.LOW,
+                confidence_note="该数据来自网络用户自行爆料，官方未证实，仅供参考",
+                mentioned_salary=d.get("mentioned_salary",""),
+                mentioned_pros=d.get("mentioned_pros",[]),
+                mentioned_cons=d.get("mentioned_cons",[])))
+        if not result:
+            result.append(SentimentItem(
+                id=str(uuid.uuid4()),
+                title=f"{company_name}相关信息",
+                summary="暂无该公司的公开舆情数据。",
+                source=DataSource.MOCK, confidence=ConfidenceLevel.UNVERIFIED))
+        return result
+
+:
+    MOCK_DATA = {
+    "\u5c0f\u7c73": [
+        {
+            "title": "\u5c0f\u7c73\u5458\u5de5\u5de5\u4f5c\u4f53\u9a8c",
+            "summary": "\u5c0f\u7c73\u5de5\u4f5c5\u5e74\u4e86\uff0c\u6574\u4f53\u611f\u89c9\u4e0d\u9519\u3002",
+            "source_name": "\u8109\u8109",
+            "publish_date": "2024-12-20",
+            "sentiment": "positive",
+            "mentioned_salary": "20k-45k",
+            "category": "review",
+            "mentioned_pros": [
+                "\u798f\u5229\u597d"
+            ],
+            "mentioned_cons": [
+                "\u52a0\u73ed\u591a"
+            ]
+        }
+    ],
+    "\u817e\u8baf": [
+        {
+            "title": "\u817e\u8baf\u5458\u5de5\u5de5\u4f5c\u4f53\u9a8c",
+            "summary": "\u5728\u817e\u8baf\u5de5\u4f5c3\u5e74\u4e86\uff0c\u6574\u4f53\u611f\u89c9\u4e0d\u9519\u3002",
+            "source_name": "\u8109\u8109",
+            "publish_date": "2024-12-15",
+            "sentiment": "positive",
+            "mentioned_salary": "25k-45k",
+            "category": "review",
+            "mentioned_pros": [
+                "\u798f\u5229\u597d"
+            ],
+            "mentioned_cons": [
+                "\u52a0\u73ed\u591a"
+            ]
+        }
+    ],
+    "\u7f8e\u56e2": [
+        {
+            "title": "\u7f8e\u56e2\u5de5\u4f5c\u4f53\u9a8c",
+            "summary": "\u7f8e\u56e2\u56e2\u961f\u5f88\u62fc\uff0c\u5e74\u7ec8\u5956\u770b\u7ee9\u6548\u3002",
+            "source_name": "\u8109\u8109",
+            "publish_date": "2024-12-05",
+            "sentiment": "neutral",
+            "mentioned_salary": "22k-40k",
+            "category": "review",
+            "mentioned_pros": [
+                "\u798f\u5229\u597d"
+            ],
+            "mentioned_cons": [
+                "\u52a0\u73ed\u591a"
+            ]
+        }
+    ],
+    "\u54d4\u54e9\u54d4\u54e9": [
+        {
+            "title": "B\u7ad9\u5de5\u4f5c\u4f53\u9a8c",
+            "summary": "B\u7ad9\u6c1b\u56f4\u5e74\u8f7b\u5316\uff0c\u4e8c\u6b21\u5143\u6587\u5316\u6d53\u539a\u3002",
+            "source_name": "\u77e5\u4e4e",
+            "publish_date": "2024-10-20",
+            "sentiment": "positive",
+            "mentioned_salary": "18k-35k",
+            "category": "review",
+            "mentioned_pros": [
+                "\u6c1b\u56f4\u597d"
+            ],
+            "mentioned_cons": [
+                "\u85aa\u8d44\u4e00\u822c"
+            ]
+        }
+    ]
+}
+
+    @classmethod
+    def get_sentiments(cls, company_name: str):
+        raw = cls.MOCK_DATA.get(company_name, [])
+        if not raw:
+            for key, data in cls.MOCK_DATA.items():
+                if company_name in key or key in company_name:
+                    raw = data
+                    break
+        result = []
+        for d in raw:
+            result.append(SentimentItem(
+                id=str(uuid.uuid4()), title=d.get("title",""),
+                summary=d.get("summary",""), content=d.get("summary",""),
+                source=DataSource.MOCK, source_name=d.get("source_name","网络"),
+                publish_date=d.get("publish_date",""), category=d.get("category","general"),
+                sentiment=d.get("sentiment","neutral"),
+                sentiment_score=1.0 if d.get("sentiment")=="positive" else -1.0 if d.get("sentiment")=="negative" else 0,
+                confidence=ConfidenceLevel.LOW,
+                confidence_note="该数据来自网络用户自行爆料，官方未证实，仅供参考",
+                mentioned_salary=d.get("mentioned_salary",""),
+                mentioned_pros=d.get("mentioned_pros",[]),
+                mentioned_cons=d.get("mentioned_cons",[])))
+        if not result:
+            result.append(SentimentItem(
+                id=str(uuid.uuid4()),
+                title=f"{company_name}相关信息",
+                summary="暂无该公司的公开舆情数据。",
+                source=DataSource.MOCK, confidence=ConfidenceLevel.UNVERIFIED))
+        return result
+
+class MockRiskData:
+    MOCK_DATA = {
+    "\u5c0f\u7c73": [
+        {
+            "case_type": "\u6c11\u4e8b",
+            "case_number": "(2024)\u4eac01\u6c11\u521d8901\u53f7",
+            "title": "\u5c0f\u7c73\u4e0e\u67d0\u4f9b\u5e94\u5546\u5408\u540c\u7ea0\u7eb7",
+            "summary": "\u539f\u544a\u67d0\u4f9b\u5e94\u5546\u8bc9\u5c0f\u7c73\u79d1\u6280\u6709\u9650\u8d23\u4efb\u516c\u53f8\u5408\u540c\u8fdd\u7ea6\u3002",
+            "risk_level": "\u4f4e",
+            "risk_category": "\u5408\u540c\u7ea0\u7eb7"
+        }
+    ],
+    "\u817e\u8baf": [
+        {
+            "case_type": "\u6c11\u4e8b",
+            "case_number": "(2024)\u7ca403\u6c11\u521d1234\u53f7",
+            "title": "\u817e\u8baf\u4e0e\u67d0\u516c\u53f8\u8457\u4f5c\u6743\u7ea0\u7eb7\u6848",
+            "summary": "\u539f\u544a\u817e\u8baf\u516c\u53f8\u8bc9\u88ab\u544a\u4fb5\u72af\u8457\u4f5c\u6743\u3002",
+            "risk_level": "\u4f4e",
+            "risk_category": "\u77e5\u8bc6\u4ea7\u6743"
+        }
+    ]
+    "字节跳动": [
+        {
+            "case_type": "民事",
+            "case_number": "",
+            "title": "字节跳动劳动纠纷",
+            "summary": "少量经济纠纷案件，已和解处理",
+            "level": "低",
+            "date": "2025-01-15"
+        }
+    ],
+}
+
+    @classmethod
+    def get_risks(cls, company_name: str):
+        raw = cls.MOCK_DATA.get(company_name, [])
+        if not raw:
+            for key, data in cls.MOCK_DATA.items():
+                if company_name in key or key in company_name:
+                    raw = data
+                    break
+        result = []
+        for d in raw:
+            result.append(RiskItem(
+                id=str(uuid.uuid4()), case_type=d.get("case_type",""),
+                case_number=d.get("case_number",""), title=d.get("title",""),
+                summary=d.get("summary",""), risk_level=d.get("risk_level","低"),
+                risk_category=d.get("risk_category","其他"),
+                source=DataSource.MOCK, source_name="中国裁判文书网(模拟)",
+                fetch_time=datetime.now().isoformat()))
+        if not result:
+            result.append(RiskItem(
+                id=str(uuid.uuid4()), case_type="无公开记录",
+                title=f"{company_name}暂无公开的司法风险记录",
+                risk_level="低", source=DataSource.MOCK))
+        return result
+
+:
+    MOCK_DATA = {
+    "\u5c0f\u7c73": [
+        {
+            "case_type": "\u6c11\u4e8b",
+            "case_number": "(2024)\u4eac01\u6c11\u521d8901\u53f7",
+            "title": "\u5c0f\u7c73\u4e0e\u67d0\u4f9b\u5e94\u5546\u5408\u540c\u7ea0\u7eb7",
+            "summary": "\u539f\u544a\u67d0\u4f9b\u5e94\u5546\u8bc9\u5c0f\u7c73\u79d1\u6280\u6709\u9650\u8d23\u4efb\u516c\u53f8\u5408\u540c\u8fdd\u7ea6\u3002",
+            "risk_level": "\u4f4e",
+            "risk_category": "\u5408\u540c\u7ea0\u7eb7"
+        }
+    ],
+    "\u817e\u8baf": [
+        {
+            "case_type": "\u6c11\u4e8b",
+            "case_number": "(2024)\u7ca403\u6c11\u521d1234\u53f7",
+            "title": "\u817e\u8baf\u4e0e\u67d0\u516c\u53f8\u8457\u4f5c\u6743\u7ea0\u7eb7\u6848",
+            "summary": "\u539f\u544a\u817e\u8baf\u516c\u53f8\u8bc9\u88ab\u544a\u4fb5\u72af\u8457\u4f5c\u6743\u3002",
+            "risk_level": "\u4f4e",
+            "risk_category": "\u77e5\u8bc6\u4ea7\u6743"
+        }
+    ]
+}
+
+    @classmethod
+    def get_risks(cls, company_name: str):
+        raw = cls.MOCK_DATA.get(company_name, [])
+        if not raw:
+            for key, data in cls.MOCK_DATA.items():
+                if company_name in key or key in company_name:
+                    raw = data
+                    break
+        result = []
+        for d in raw:
+            result.append(RiskItem(
+                id=str(uuid.uuid4()), case_type=d.get("case_type",""),
+                case_number=d.get("case_number",""), title=d.get("title",""),
+                summary=d.get("summary",""), risk_level=d.get("risk_level","低"),
+                risk_category=d.get("risk_category","其他"),
+                source=DataSource.MOCK, source_name="中国裁判文书网(模拟)",
+                fetch_time=datetime.now().isoformat()))
+        if not result:
+            result.append(RiskItem(
+                id=str(uuid.uuid4()), case_type="无公开记录",
+                title=f"{company_name}暂无公开的司法风险记录",
+                risk_level="低", source=DataSource.MOCK))
+        return result
+
+class MockSalaryData:
+    MOCK_DATA = {
+    "\u5c0f\u7c73": {
+        "avg_monthly": "20k-40k",
+        "salary_range": "15k-50k",
+        "year_end_bonus": "2-4\u4e2a\u6708",
+        "benefits": [
+            "\u4e94\u9669\u4e00\u91d1",
+            "\u80a1\u7968\u671f\u6743"
+        ]
+    },
+    "\u817e\u8baf": {
+        "avg_monthly": "25k-45k",
+        "salary_range": "15k-60k",
+        "year_end_bonus": "2-6\u4e2a\u6708",
+        "benefits": [
+            "\u4e94\u9669\u4e00\u91d1",
+            "\u514d\u8d39\u4e09\u9910"
+        ]
+    },
+    "字节跳动": {
+        "avg_monthly": "25k-55k",
+        "salary_range": "25k-55k",
+        "year_end_bonus": "2-6个月",
+        "benefits": ["免费午餐", "上门按摩", "健康体检"]
+    },
+    "\u7f8e\u56e2": {
+        "avg_monthly": "22k-42k",
+        "salary_range": "15k-55k",
+        "year_end_bonus": "1-4\u4e2a\u6708",
+        "benefits": [
+            "\u4e94\u9669\u4e00\u91d1",
+            "\u9910\u8865"
+        ]
+    },
+    "\u54d4\u54e9\u54d4\u54e9": {
+        "avg_monthly": "18k-35k",
+        "salary_range": "12k-45k",
+        "year_end_bonus": "1-3\u4e2a\u6708",
+        "benefits": [
+            "\u4e94\u9669\u4e00\u91d1",
+            "\u5e74\u5047"
+        ]
+    }
+}
+
+    @classmethod
+    def get_salary(cls, company_name: str):
+        return cls.MOCK_DATA.get(company_name)
+    @classmethod
+    def get_default_salary(cls, company_name: str):
+        return {"avg_monthly":"暂无公开数据","benefits":[]}
+
+:
+    MOCK_DATA = {
+    "\u5c0f\u7c73": {
+        "avg_monthly": "20k-40k",
+        "salary_range": "15k-50k",
+        "year_end_bonus": "2-4\u4e2a\u6708",
+        "benefits": [
+            "\u4e94\u9669\u4e00\u91d1",
+            "\u80a1\u7968\u671f\u6743"
+        ]
+    },
+    "\u817e\u8baf": {
+        "avg_monthly": "25k-45k",
+        "salary_range": "15k-60k",
+        "year_end_bonus": "2-6\u4e2a\u6708",
+        "benefits": [
+            "\u4e94\u9669\u4e00\u91d1",
+            "\u514d\u8d39\u4e09\u9910"
+        ]
+    },
+    "\u7f8e\u56e2": {
+        "avg_monthly": "22k-42k",
+        "salary_range": "15k-55k",
+        "year_end_bonus": "1-4\u4e2a\u6708",
+        "benefits": [
+            "\u4e94\u9669\u4e00\u91d1",
+            "\u9910\u8865"
+        ]
+    },
+    "\u54d4\u54e9\u54d4\u54e9": {
+        "avg_monthly": "18k-35k",
+        "salary_range": "12k-45k",
+        "year_end_bonus": "1-3\u4e2a\u6708",
+        "benefits": [
+            "\u4e94\u9669\u4e00\u91d1",
+            "\u5e74\u5047"
+        ]
+    }
+}
+
+    @classmethod
+    def get_salary(cls, company_name: str):
+        return cls.MOCK_DATA.get(company_name)
+    @classmethod
+    def get_default_salary(cls, company_name: str):
+        return {"avg_monthly":"暂无公开数据","benefits":[]}
+
+class MockReputationData:
+    MOCK_DATA = {
+    "\u5c0f\u7c73": {
+        "overall_rating": "4.0/5",
+        "recommendation_rate": "82%",
+        "pros": [
+            "\u798f\u5229\u5b8c\u5584"
+        ],
+        "cons": [
+            "\u90e8\u5206\u52a0\u73ed\u591a"
+        ],
+        "culture_keywords": [
+            "\u5de5\u7a0b\u5e08\u6587\u5316"
+        ]
+    },
+    "\u817e\u8baf": {
+        "overall_rating": "4.2/5",
+        "recommendation_rate": "85%",
+        "pros": [
+            "\u798f\u5229\u597d"
+        ],
+        "cons": [
+            "\u7ade\u4e89\u6fc0\u70c8"
+        ],
+        "culture_keywords": [
+            "\u4ea7\u54c1\u5bfc\u5411"
+        ]
+    },
+    "字节跳动": {
+        "overall_rating": "4.1/5",
+        "recommendation_rate": "82%",
+        "pros": ["成长快"],
+        "cons": ["加班多"],
+        "culture_keywords": ["新质生产力"]
+    },
+    "\u7f8e\u56e2": {
+        "overall_rating": "3.8/5",
+        "recommendation_rate": "76%",
+        "pros": [
+            "\u4e1a\u52a1\u7a33\u5b9a"
+        ],
+        "cons": [
+            "\u52a0\u73ed\u591a"
+        ],
+        "culture_keywords": [
+            "\u7ed3\u679c\u5bfc\u5411"
+        ]
+    },
+    "\u54d4\u54e9\u54d4\u54e9": {
+        "overall_rating": "4.0/5",
+        "recommendation_rate": "80%",
+        "pros": [
+            "\u6c1b\u56f4\u597d"
+        ],
+        "cons": [
+            "\u85aa\u8d44\u4e00\u822c"
+        ],
+        "culture_keywords": [
+            "\u4e8c\u6b21\u5143\u6587\u5316"
+        ]
+    }
+}
+
+    @classmethod
+    def get_reputation(cls, company_name: str):
+        data = cls.MOCK_DATA.get(company_name)
+        if not data:
+            for key, d in cls.MOCK_DATA.items():
+                if company_name in key or key in company_name:
+                    data = d
+                    break
+        return data
+
+:
+    MOCK_DATA = {
+    "\u5c0f\u7c73": {
+        "overall_rating": "4.0/5",
+        "recommendation_rate": "82%",
+        "pros": [
+            "\u798f\u5229\u5b8c\u5584"
+        ],
+        "cons": [
+            "\u90e8\u5206\u52a0\u73ed\u591a"
+        ],
+        "culture_keywords": [
+            "\u5de5\u7a0b\u5e08\u6587\u5316"
+        ]
+    },
+    "\u817e\u8baf": {
+        "overall_rating": "4.2/5",
+        "recommendation_rate": "85%",
+        "pros": [
+            "\u798f\u5229\u597d"
+        ],
+        "cons": [
+            "\u7ade\u4e89\u6fc0\u70c8"
+        ],
+        "culture_keywords": [
+            "\u4ea7\u54c1\u5bfc\u5411"
+        ]
+    },
+    "\u7f8e\u56e2": {
+        "overall_rating": "3.8/5",
+        "recommendation_rate": "76%",
+        "pros": [
+            "\u4e1a\u52a1\u7a33\u5b9a"
+        ],
+        "cons": [
+            "\u52a0\u73ed\u591a"
+        ],
+        "culture_keywords": [
+            "\u7ed3\u679c\u5bfc\u5411"
+        ]
+    },
+    "\u54d4\u54e9\u54d4\u54e9": {
+        "overall_rating": "4.0/5",
+        "recommendation_rate": "80%",
+        "pros": [
+            "\u6c1b\u56f4\u597d"
+        ],
+        "cons": [
+            "\u85aa\u8d44\u4e00\u822c"
+        ],
+        "culture_keywords": [
+            "\u4e8c\u6b21\u5143\u6587\u5316"
+        ]
+    }
+}
+
+    @classmethod
+    def get_reputation(cls, company_name: str):
+        data = cls.MOCK_DATA.get(company_name)
+        if not data:
+            for key, d in cls.MOCK_DATA.items():
+                if company_name in key or key in company_name:
+                    data = d
+                    break
+        return data
+
+class MockInterviewData:
+    MOCK_DATA = {
+    "\u5c0f\u7c73": {
+        "interview_difficulty": "\u4e2d\u7b49",
+        "interview_rounds": "3-4\u8f6e",
+        "common_questions": [
+            "\u6280\u672f\u57fa\u7840",
+            "\u9879\u76ee\u7ecf\u9a8c"
+        ],
+        "interview_tips": [
+            "\u4e86\u89e3\u5c0f\u7c73\u4ea7\u54c1"
+        ]
+    },
+    "\u817e\u8baf": {
+        "interview_difficulty": "\u4e2d\u7b49\u504f\u96be",
+        "interview_rounds": "4-5\u8f6e",
+        "common_questions": [
+            "\u7cfb\u7edf\u8bbe\u8ba1",
+            "\u7b97\u6cd5\u9898"
+        ],
+        "interview_tips": [
+            "\u51c6\u5907\u597d\u9879\u76ee\u6df1\u6316"
+        ]
+    },
+    "字节跳动": {
+        "interview_difficulty": "较难",
+        "interview_rounds": "4-5轮",
+        "common_questions": ["系统设计", "算法题"],
+        "interview_tips": ["多刷题", "准备项目经历"]
+    },
+    "\u7f8e\u56e2": {
+        "interview_difficulty": "\u4e2d\u7b49",
+        "interview_rounds": "3-4\u8f6e",
+        "common_questions": [
+            "\u6280\u672f\u6df1\u5ea6",
+            "\u4e1a\u52a1\u7406\u89e3"
+        ],
+        "interview_tips": [
+            "\u4e86\u89e3\u7f8e\u56e2\u4e1a\u52a1"
+        ]
+    },
+    "\u54d4\u54e9\u54d4\u54e9": {
+        "interview_difficulty": "\u4e2d\u7b49",
+        "interview_rounds": "3-4\u8f6e",
+        "common_questions": [
+            "\u6280\u672f\u57fa\u7840",
+            "\u6587\u5316\u5339\u914d"
+        ],
+        "interview_tips": [
+            "\u4e86\u89e3B\u7ad9\u6587\u5316"
+        ]
+    }
+}
+
+    @classmethod
+    def get_interview(cls, company_name: str):
+        data = cls.MOCK_DATA.get(company_name)
+        if not data:
+            for key, d in cls.MOCK_DATA.items():
+                if company_name in key or key in company_name:
+                    data = d
+                    break
+        return data

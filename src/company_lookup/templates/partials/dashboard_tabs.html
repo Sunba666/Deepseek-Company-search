@@ -1,0 +1,237 @@
+{% set company_full_name = {
+    '腾讯': '腾讯控股有限公司',
+    '阿里巴巴': '阿里巴巴集团控股有限公司',
+    '字节跳动': '字节跳动有限公司',
+    '华为': '华为技术有限公司',
+    '小米': '小米科技有限责任公司',
+    '京东': '北京京东世纪贸易有限公司',
+    '美团': '三快在线科技有限公司',
+    '网易': '网易集团',
+    '百度': '百度在线网络技术有限公司'
+}.get(company, data.name or company) %}
+
+<div class="company-header">
+    <h2 class="gradient-title"><i class="bi bi-building"></i> {{ company_full_name }}</h2>
+    <p class="text-muted">简称: {{ company }} | AI深度分析报告</p>
+    <div class="header-badges">
+        {% if data.funding_status %}
+        <span class="badge bg-primary">{{ data.funding_status }}</span>
+        {% endif %}
+        {% if data.scale %}
+        <span class="badge bg-success">{{ data.scale }}</span>
+        {% endif %}
+        {% if data.industry %}
+        <span class="badge bg-info">{{ data.industry }}</span>
+        {% endif %}
+    </div>
+</div>
+
+<ul class="nav nav-tabs nav-fill" id="companyTabs" role="tablist">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#basic"><i class="bi bi-info-circle"></i> 基本信息</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#labor"><i class="bi bi-shield-exclamation"></i> 劳动风险</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#salary"><i class="bi bi-currency-yen"></i> 薪酬福利</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reputation"><i class="bi bi-people"></i> 员工口碑</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#interview"><i class="bi bi-chat-dots"></i> 面试经验</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#radar"><i class="bi bi-radar"></i> 风险雷达</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ai"><i class="bi bi-robot"></i> AI分析</a></li>
+</ul>
+
+<div id="tabContent" class="tab-content">
+    <!-- 基本信息 -->
+    <div class="tab-pane fade show active" id="basic">
+        {% if data %}
+        <div class="score-overview">
+            <div class="overall-score">
+                <div class="score-circle">
+                    <div class="score-value" id="overallScore">{{ data.overall_score | default('--') }}</div>
+                    <div class="score-label">综合评分</div>
+                </div>
+                <p class="text-muted">基于多维度分析的综合评价</p>
+            </div>
+            <div class="info-grid">
+                {% if data.name %}<div class="info-item"><span class="info-label">公司全称</span><span class="info-value">{{ data.name }}</span></div>{% endif %}
+                {% if data.english_name %}<div class="info-item"><span class="info-label">英文名称</span><span class="info-value">{{ data.english_name }}</span></div>{% endif %}
+                {% if data.industry %}<div class="info-item"><span class="info-label">所属行业</span><span class="info-value">{{ data.industry }}</span></div>{% endif %}
+                {% if data.sub_industry %}<div class="info-item"><span class="info-label">细分领域</span><span class="info-value">{{ data.sub_industry }}</span></div>{% endif %}
+                {% if data.scale %}<div class="info-item"><span class="info-label">公司规模</span><span class="info-value">{{ data.scale }}</span></div>{% endif %}
+                {% if data.established_year %}<div class="info-item"><span class="info-label">成立年份</span><span class="info-value">{{ data.established_year }}</span></div>{% endif %}
+                {% if data.registered_capital %}<div class="info-item"><span class="info-label">注册资本</span><span class="info-value">{{ data.registered_capital }}</span></div>{% endif %}
+                {% if data.business_scope %}<div class="info-item"><span class="info-label">主营业务</span><span class="info-value">{{ data.business_scope }}</span></div>{% endif %}
+                {% if data.headquarters %}<div class="info-item"><span class="info-label">总部所在地</span><span class="info-value">{{ data.headquarters }}</span></div>{% endif %}
+                {% if data.funding_status %}<div class="info-item"><span class="info-label">融资状态</span><span class="info-value">{{ data.funding_status }}</span></div>{% endif %}
+                {% if data.stock_code %}<div class="info-item"><span class="info-label">股票代码</span><span class="info-value">{{ data.stock_code }}</span></div>{% endif %}
+                {% if data.website %}<div class="info-item"><span class="info-label">公司官网</span><span class="info-value"><a href="{{ data.website }}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">{{ data.website }}</a></span></div>{% endif %}
+                {% if data.careers_url %}<div class="info-item career-link"><span class="info-label">投递通道</span><span class="info-value"><a href="{{ data.careers_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary"><i class="bi bi-link-45deg"></i> 立即投递</a></span></div>{% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 劳动风险 -->
+    <div class="tab-pane fade" id="labor">
+        {% if data.labor_risk %}
+        <div>
+            <h3><i class="bi bi-exclamation-triangle"></i> 劳动风险</h3>
+            <div class="risk-analysis">
+                <h5>风险等级：{{ data.labor_risk.risk_level }}</h5>
+                {% if data.labor_risk.risk_analysis %}
+                <p>{{ data.labor_risk.risk_analysis }}</p>
+                {% endif %}
+            </div>
+            
+            {% if data.labor_risk.risk_items and data.labor_risk.risk_items|length > 0 %}
+            <div class="risk-records">
+                {% for item in data.labor_risk.risk_items %}
+                <div class="risk-item">
+                    <div class="risk-item-header">
+                        <span class="risk-type">{{ item.type }}</span>
+                        {% if item.date %}<span class="risk-date">{{ item.date }}</span>{% endif %}
+                    </div>
+                    {% if item.amount %}<div class="risk-amount">金额：{{ item.amount }}</div>{% endif %}
+                    {% if item.summary %}<div class="risk-item-summary">{{ item.summary }}</div>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="safe-message"><i class="bi bi-check-circle"></i> 当前无重大劳动风险记录</div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="no-data">目前没有查到这家公司的劳动风险信息。没有消息不一定就是好消息，面试时可以留意一下。</div>
+        {% endif %}
+    </div>
+
+    <!-- 薪酬福利 -->
+    <div class="tab-pane fade" id="salary">
+        {% if data.salary %}
+        <div>
+            <h3><i class="bi bi-cash-stack"></i> 薪酬福利</h3>
+            <div class="info-grid">
+                {% if data.salary.avg_monthly %}<div class="info-item"><span class="info-label">平均月薪</span><span class="info-value">{{ data.salary.avg_monthly }}</span></div>{% endif %}
+                {% if data.salary.salary_range %}<div class="info-item"><span class="info-label">薪资范围</span><span class="info-value">{{ data.salary.salary_range }}</span></div>{% endif %}
+                {% if data.salary.year_end_bonus %}<div class="info-item"><span class="info-label">年终奖金</span><span class="info-value">{{ data.salary.year_end_bonus }}</span></div>{% endif %}
+                {% if data.salary.salary_adjustment %}<div class="info-item"><span class="info-label">调薪频率</span><span class="info-value">{{ data.salary.salary_adjustment }}</span></div>{% endif %}
+                {% if data.salary.benefits %}<div class="info-item full-width"><span class="info-label">福利项目</span><span class="info-value">{{ data.salary.benefits | join(', ') }}</span></div>{% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="no-data">暂无薪酬福利数据</div>
+        {% endif %}
+    </div>
+
+    <!-- 员工口碑 -->
+    <div class="tab-pane fade" id="reputation">
+        {% if data.reputation %}
+        <div>
+            <h3><i class="bi bi-chat-quote"></i> 员工口碑</h3>
+            <div class="info-grid">
+                {% if data.reputation.overall_rating %}<div class="info-item"><span class="info-label">综合评分</span><span class="info-value">{{ data.reputation.overall_rating }}</span></div>{% endif %}
+                {% if data.reputation.recommendation_rate %}<div class="info-item"><span class="info-label">推荐率</span><span class="info-value">{{ data.reputation.recommendation_rate }}</span></div>{% endif %}
+                {% if data.reputation.ceo_approval_rate %}<div class="info-item"><span class="info-label">CEO认可度</span><span class="info-value">{{ data.reputation.ceo_approval_rate }}</span></div>{% endif %}
+                {% if data.reputation.pros %}<div class="info-item full-width"><span class="info-label">好评点</span><span class="info-value">{{ data.reputation.pros | join(', ') }}</span></div>{% endif %}
+                {% if data.reputation.cons %}<div class="info-item full-width"><span class="info-label">差评点</span><span class="info-value">{{ data.reputation.cons | join(', ') }}</span></div>{% endif %}
+                {% if data.reputation.culture_keywords %}<div class="info-item full-width"><span class="info-label">文化标签</span><span class="info-value">{{ data.reputation.culture_keywords | join(', ') }}</span></div>{% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="no-data">暂无员工口碑数据</div>
+        {% endif %}
+    </div>
+
+    <!-- 面试经验 -->
+    <div class="tab-pane fade" id="interview">
+        {% if data.interview %}
+        <div>
+            <h3><i class="bi bi-crosshair"></i> 面试经验</h3>
+            <div class="interview-info-list">
+                {% if data.interview.interview_difficulty %}<div class="info-item"><span class="info-label">面试难度</span><span class="info-value">{{ data.interview.interview_difficulty }}</span></div>{% endif %}
+                {% if data.interview.interview_rounds %}<div class="info-item"><span class="info-label">面试轮数</span><span class="info-value">{{ data.interview.interview_rounds }}</span></div>{% endif %}
+                {% if data.interview.positive_rate %}<div class="info-item"><span class="info-label">通过率</span><span class="info-value">{{ data.interview.positive_rate }}</span></div>{% endif %}
+                {% if data.interview.avg_interview_duration %}<div class="info-item"><span class="info-label">平均时长</span><span class="info-value">{{ data.interview.avg_interview_duration }}</span></div>{% endif %}
+            </div>
+            
+            {% if data.interview.common_questions %}
+            <div class="questions-section">
+                <h4>常见问题与参考回答</h4>
+                <div class="questions-list">
+                    {% for q in data.interview.common_questions %}
+                    <div class="question-item">
+                        <div class="question-text"><strong>问：</strong>{{ q }}</div>
+                        <div class="answer-text text-muted"><strong>参考回答：</strong>{{ data.interview.common_answers[q] if data.interview.common_answers else '根据个人经验准备相关回答' }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if data.interview.interview_tips %}
+            <div class="tips-section">
+                <h4>面试建议</h4>
+                <div class="tips-list">
+                    {% for tip in data.interview.interview_tips %}
+                    <div class="tip-item">{{ tip }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="no-data">暂无面试经验数据</div>
+        {% endif %}
+        
+        <div class="mt-4">
+            <h5><i class="bi bi-crosshair"></i> 面试问题预测</h5>
+            <button class="btn btn-secondary mb-3" id="generateQuestionsBtn" onclick="generateQuestions()">生成预测题</button>
+            <div id="interview-questions-result"></div>
+            
+            <div id="mock-interview-section" style="display: none;">
+                <div class="border p-4 mt-4">
+                    <h6><i class="bi bi-chat-quote"></i> 模拟面试</h6>
+                    <div id="current-question"></div>
+                    <textarea id="answer-input" class="form-control mt-2" rows="3" placeholder="输入你的回答..."></textarea>
+                    <button class="btn btn-success mt-2" onclick="submitAnswer()">提交回答</button>
+                    <div id="answer-feedback"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 风险雷达 -->
+    <div class="tab-pane fade" id="radar">
+        <div class="radar-section">
+            <h5><i class="bi bi-bar-chart"></i> 隐形风险雷达图</h5>
+            <button class="btn btn-outline-primary mb-3" onclick="initRadarChart()">加载雷达图</button>
+            <div id="radar-chart" style="width: 100%; height: 400px;"></div>
+        </div>
+    </div>
+
+    <!-- AI分析 -->
+    <div class="tab-pane fade" id="ai">
+        <div class="ai-section">
+            <form hx-post="{{ url_for('company.analyze') }}" hx-target="#ai-result" hx-swap="innerHTML" hx-indicator="#ai-loading">
+                <input type="hidden" name="query" value="{{ company }}">
+                <textarea name="user_context" class="form-control mb-2" rows="2" placeholder="补充你的了解或期望（可选）"></textarea>
+                <button class="btn btn-success" type="submit">重新生成AI分析</button>
+            </form>
+
+            <div id="ai-loading" class="htmx-indicator loading-container" style="display: none;">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">
+                    <span>AI 正在分析中...</span>
+                    <small>预计需要 10-30 秒</small>
+                </div>
+            </div>
+
+            <div id="ai-result" class="mt-3">
+                {% if company %}
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <p class="mt-3 text-muted">AI正在深度分析{{ company }}...</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

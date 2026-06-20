@@ -1,0 +1,58 @@
+<!--
+矛盾检测模块 - 仲裁结果
+显示AI提取的矛盾点，明确标注信息来源，禁止编造统一答案
+-->
+<div class="conflict-section" id="conflict-section">
+    <h3><i class="bi bi-search"></i> 矛盾点检测</h3>
+
+    {% if conflicts and conflicts|length > 0 %}
+    <div class="conflict-list">
+        {% for conflict in conflicts %}
+        <div class="conflict-item">
+            <div class="conflict-header">
+                <span class="conflict-icon"><i class="bi bi-exclamation-triangle"></i></span>
+                <span class="conflict-category">{{ conflict.category }}</span>
+            </div>
+
+            <div class="conflict-description">
+                <p>{{ conflict.description }}</p>
+            </div>
+
+            <div class="conflict-sources">
+                <h5>涉及的信息来源:</h5>
+                <ul>
+                    {% for source in conflict.sources %}
+                    <li>
+                        <span class="source-label">[{{ source.source }}]</span>
+                        <span class="source-content">{{ source.content }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            {% if conflict.resolution_hint %}
+            <div class="resolution-hint">
+                <h5><i class="bi bi-lightbulb"></i> 提示</h5>
+                <p>{{ conflict.resolution_hint }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="conflict-disclaimer">
+        <p><strong>重要说明：</strong></p>
+        <ul>
+            <li>上述矛盾点由系统自动检测，不代表任何官方立场</li>
+            <li>不同来源的信息可能因统计口径、时间节点等因素存在差异</li>
+            <li>建议用户通过原始来源链接自行核实</li>
+        </ul>
+    </div>
+
+    {% else %}
+    <div class="empty-state success">
+        <p><i class="bi bi-check-circle"></i> 未检测到明显矛盾</p>
+        <small>各来源数据基本一致，请放心参考</small>
+    </div>
+    {% endif %}
+</div>

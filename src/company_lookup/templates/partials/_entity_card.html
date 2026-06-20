@@ -1,0 +1,105 @@
+<!--
+工商信息卡片模板
+由company_result.html动态引入
+-->
+{% if entity %}
+<div class="entity-info">
+    {% if entity.is_valid %}
+    <div class="row">
+        <div class="col-md-6">
+            <table class="table table-sm table-hover">
+                <tbody>
+                    <tr>
+                        <td class="fw-bold" style="width: 40%">公司全称</td>
+                        <td>{{ entity.company_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">统一社会信用代码</td>
+                        <td>{{ entity.unified_credit_code or '未公开' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">法定代表人</td>
+                        <td>{{ entity.legal_representative or '未公开' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">企业状态</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if entity.company_status == '存续' else 'secondary' }}">
+                                {{ entity.company_status or '未知' }}
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <table class="table table-sm table-hover">
+                <tbody>
+                    <tr>
+                        <td class="fw-bold" style="width: 40%">注册资本</td>
+                        <td class="text-primary fw-bold">{{ entity.registered_capital or '未公开' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">实缴资本</td>
+                        <td>{{ entity.paid_in_capital or '未公开' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">成立日期</td>
+                        <td>{{ entity.establishment_date or '未知' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">企业类型</td>
+                        <td>{{ entity.company_type or '未知' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if entity.registered_address %}
+    <div class="mt-2">
+        <strong>注册地址：</strong>
+        <span class="text-muted">{{ entity.registered_address }}</span>
+    </div>
+    {% endif %}
+
+    {% if entity.business_scope %}
+    <div class="mt-2">
+        <strong>经营范围：</strong>
+        <span class="text-muted small">{{ entity.business_scope[:200] }}{% if entity.business_scope|length > 200 %}...{% endif %}</span>
+    </div>
+    {% endif %}
+
+    {% if entity.shareholders %}
+    <div class="mt-3">
+        <strong>主要股东：</strong>
+        <ul class="list-unstyled">
+            {% for shareholder in entity.shareholders[:5] %}
+            <li class="small">
+                <span class="me-2">•</span>
+                {{ shareholder.name }}
+                <span class="text-primary">({{ shareholder.percentage }})</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if entity.source %}
+    <div class="mt-3 text-muted small">
+        <span class="badge bg-secondary">{{ entity.source.value }}</span>
+        数据更新时间：{{ entity.fetch_time[:16] if entity.fetch_time else '未知' }}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="alert alert-warning mb-0">
+        <p class="mb-0"><i class="bi bi-exclamation-triangle"></i> {{ entity.error_message or '未查询到该企业的工商信息' }}</p>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="alert alert-info mb-0">
+    暂无工商信息数据
+</div>
+{% endif %}

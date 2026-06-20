@@ -1,0 +1,63 @@
+<!--
+员工口碑卡片模板
+由company_result.html动态引入
+-->
+{% if reputation_data %}
+<div class="reputation-info">
+    {% if reputation_data.get("overall_rating") %}
+    <div class="score-overview mb-3">
+        <div class="overall-score">
+            <div class="score-circle">{{ reputation_data.overall_rating }}</div>
+        </div>
+        <div class="info-grid">
+            {% if reputation_data.get("recommendation_rate") %}
+            <div class="info-item"><span class="info-label">推荐率</span><span class="info-value">{{ reputation_data.recommendation_rate }}</span></div>
+            {% endif %}
+            {% if reputation_data.get("ceo_approval_rate") %}
+            <div class="info-item"><span class="info-label">CEO认可度</span><span class="info-value">{{ reputation_data.ceo_approval_rate }}</span></div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if reputation_data.get("pros") %}
+    <div class="mb-2">
+        <span class="text-success fw-bold">&#9989; 好评点</span>
+        <div class="mt-1">
+            {% for p in reputation_data.pros %}
+            <span class="badge bg-success me-1">{{ p }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if reputation_data.get("cons") %}
+    <div class="mb-2">
+        <span class="text-danger fw-bold">&#10060; 差评点</span>
+        <div class="mt-1">
+            {% for c in reputation_data.cons %}
+            <span class="badge bg-danger me-1">{{ c }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if reputation_data.get("culture_keywords") %}
+    <div class="mb-2">
+        <span class="text-info fw-bold">&#127775; 文化标签</span>
+        <div class="mt-1">
+            {% for kw in reputation_data.culture_keywords %}
+            <span class="badge bg-info me-1">{{ kw }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="mt-2 text-muted small">
+        <span class="badge bg-secondary">模拟数据</span>
+        数据来源：看准网、脉脉等职场社交平台
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info mb-0">目前没有收集到员工口碑数据。建议去脉脉或看准网搜搜这家公司的评价。</div>
+{% endif %}

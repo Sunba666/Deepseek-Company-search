@@ -1,0 +1,131 @@
+<!--
+司法风险卡片模板
+由company_result.html动态引入
+-->
+{% if risks %}
+<div class="risk-info">
+    <div class="mb-2">
+        <span class="text-muted small">
+            共查询到 {{ risk_count if risk_count else risks|length }} 条司法记录
+        </span>
+    </div>
+
+    <!-- 风险统计 -->
+    {% set high_risk = risks|selectattr('risk_level', 'equalto', '高')|list|length %}
+    {% set medium_risk = risks|selectattr('risk_level', 'equalto', '中')|list|length %}
+    {% set low_risk = risks|selectattr('risk_level', 'equalto', '低')|list|length %}
+
+    <div class="row text-center mb-3">
+        <div class="col-4">
+            <div class="p-2 rounded bg-danger bg-opacity-10">
+                <div class="h4 mb-0 text-danger">{{ high_risk }}</div>
+                <small class="text-muted">高风险</small>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="p-2 rounded bg-warning bg-opacity-10">
+                <div class="h4 mb-0 text-warning">{{ medium_risk }}</div>
+                <small class="text-muted">中风险</small>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="p-2 rounded bg-success bg-opacity-10">
+                <div class="h4 mb-0 text-success">{{ low_risk }}</div>
+                <small class="text-muted">低风险</small>
+            </div>
+        </div>
+    </div>
+
+    {% if high_risk > 0 %}
+    <div class="alert alert-danger mb-3">
+        <strong><i class="bi bi-exclamation-triangle"></i> 警告：</strong>该企业存在 {{ high_risk }} 条高风险司法记录，建议重点关注。
+    </div>
+    {% endif %}
+
+    <!-- 风险列表 -->
+    <div class="risk-list">
+        {% for item in risks[:10] %}
+        <div class="card mb-2 border-start border-3 {{ 'border-danger' if item.risk_level == '高' else ('border-warning' if item.risk_level == '中' else 'border-success') }}">
+            <div class="card-body py-2">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="badge bg-{{ 'danger' if item.risk_level == '高' else ('warning' if item.risk_level == '中' else 'success') }} me-2">
+                                {{ item.risk_level }}风险
+                            </span>
+                            {% if item.risk_category %}
+                            <span class="badge bg-secondary">{{ item.risk_category }}</span>
+                            {% endif %}
+                        </div>
+
+                        <h6 class="mb-1">{{ item.title }}</h6>
+
+                        {% if item.summary %}
+                        <p class="mb-1 small text-muted">{{ item.summary }}</p>
+                        {% endif %}
+
+                        <!-- 案件详情 -->
+                        <div class="mt-2 small">
+                            {% if item.case_number %}
+                            <div>
+                                <span class="text-muted">案号：</span>{{ item.case_number }}
+                            </div>
+                            {% endif %}
+
+                            {% if item.judgment_date %}
+                            <div>
+                                <span class="text-muted">判决日期：</span>{{ item.judgment_date }}
+                            </div>
+                            {% endif %}
+
+                            {% if item.judgment_amount %}
+                            <div>
+                                <span class="text-muted">判决金额：</span>
+                                <span class="text-danger fw-bold">{{ item.judgment_amount }}</span>
+                            </div>
+                            {% endif %}
+
+                            {% if item.plaintiff or item.defendant %}
+                            <div>
+                                <span class="text-muted">当事人：</span>
+                                {{ item.plaintiff if item.plaintiff else '' }}
+                                {% if item.plaintiff and item.defendant %} vs {% endif %}
+                                {{ item.defendant if item.defendant else '' }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 来源信息 -->
+                <div class="mt-2 d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <span class="text-primary">{{ item.source_name or '中国裁判文书网' }}</span>
+                    </small>
+
+                    {% if item.url %}
+                    <a href="{{ item.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        查看详情 ↗
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if risks|length > 10 %}
+    <div class="text-center text-muted">
+        <small>展示前10条，共 {{ risks|length }} 条</small>
+    </div>
+    {% endif %}
+
+    <div class="mt-3 text-muted small">
+        <p class="mb-0">* 以上数据来自中国裁判文书网公开记录</p>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-success mb-0">
+    <i class="bi bi-check-circle"></i> 暂未查询到该企业的公开司法风险记录
+</div>
+{% endif %}

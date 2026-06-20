@@ -1,0 +1,1023 @@
+{% if comparison and not comparison.error %}
+<div class="compare-result-container">
+    <!-- AI分析标题 -->
+    <div class="result-header">
+        <div class="header-content">
+            <div class="header-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" stroke-linejoin="round"/>
+                    <line x1="9" y1="3" x2="9" y2="21"/>
+                    <line x1="15" y1="3" x2="15" y2="21"/>
+                </svg>
+            </div>
+            <div class="header-text">
+                <h1 class="result-title">AI 深度对比分析</h1>
+                <p class="result-desc">基于DeepSeek AI深度分析，客观对比多家公司</p>
+            </div>
+        </div>
+        <div class="header-badge">
+            <span class="badge-gradient"><i class="bi bi-robot"></i> AI已深度分析</span>
+        </div>
+    </div>
+
+    <!-- 对比表格 -->
+    <div class="table-section">
+        <div class="section-header">
+            <h2>核心数据对比</h2>
+            <div class="section-divider"></div>
+        </div>
+        
+        <div class="table-wrapper">
+            <table class="compare-table">
+                <thead>
+                    <tr>
+                        <th class="sticky-col">对比维度</th>
+                        {% for item in comparison.comparison_table %}
+                        <th class="company-col">
+                            <div class="company-header">
+                                <span class="company-name">{{ item.name }}</span>
+                                <span class="company-full">{{ item.full_name | default('') }}</span>
+                            </div>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="data-row">
+                        <td class="dimension-cell">
+                            <span class="dim-icon"><i class="bi bi-building"></i></span>
+                            <span>所属行业</span>
+                        </td>
+                        {% for item in comparison.comparison_table %}
+                        <td class="data-value">{{ item.industry | default('暂无') }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr class="data-row">
+                        <td class="dimension-cell">
+                            <span class="dim-icon"><i class="bi bi-bar-chart"></i></span>
+                            <span>公司规模</span>
+                        </td>
+                        {% for item in comparison.comparison_table %}
+                        <td class="data-value">{{ item.scale | default('暂无') }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr class="data-row highlight-row">
+                        <td class="dimension-cell">
+                            <span class="dim-icon"><i class="bi bi-cash-stack"></i></span>
+                            <span>融资阶段</span>
+                        </td>
+                        {% for item in comparison.comparison_table %}
+                        <td class="data-value">
+                            <span class="funding-badge {{ item.funding_status | lower | replace(' ', '-') }}">
+                                {{ item.funding_status | default('未知') }}
+                            </span>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    <tr class="data-row highlight-row">
+                        <td class="dimension-cell">
+                            <span class="dim-icon"><i class="bi bi-star-fill"></i></span>
+                            <span>综合评分</span>
+                        </td>
+                        {% for item in comparison.comparison_table %}
+                        <td class="data-value rating-cell">
+                            <span class="rating-num">{{ item.rating | default('-') }}</span>
+                            <span class="rating-max">/5</span>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    <tr class="data-row">
+                        <td class="dimension-cell">
+                            <span class="dim-icon"><i class="bi bi-hand-thumbs-up"></i></span>
+                            <span>员工推荐率</span>
+                        </td>
+                        {% for item in comparison.comparison_table %}
+                        <td class="data-value">{{ item.recommendation_rate | default('暂无') }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr class="data-row highlight-row salary-row">
+                        <td class="dimension-cell">
+                            <span class="dim-icon"><i class="bi bi-currency-dollar"></i></span>
+                            <span>平均薪资</span>
+                        </td>
+                        {% for item in comparison.comparison_table %}
+                        <td class="data-value salary-value">{{ item.avg_salary | default('暂无') }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr class="data-row">
+                        <td class="dimension-cell">
+                            <span class="dim-icon">🛡️</span>
+                            <span>劳动风险</span>
+                        </td>
+                        {% for item in comparison.comparison_table %}
+                        <td class="data-value">
+                            {% if item.risk_level == '低' %}
+                            <span class="risk-badge safe">✓ {{ item.risk_level }}</span>
+                            {% elif item.risk_level == '中' %}
+                            <span class="risk-badge warning">⚠ {{ item.risk_level }}</span>
+                            {% elif item.risk_level == '高' %}
+                            <span class="risk-badge danger">✕ {{ item.risk_level }}</span>
+                            {% else %}
+                            <span class="risk-badge unknown">{{ item.risk_level | default('未知') }}</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 各维度最佳选择 -->
+    <div class="best-section">
+        <div class="section-header">
+            <h2>各维度最佳选择</h2>
+            <div class="section-divider"></div>
+        </div>
+        
+        <div class="best-grid">
+            <div class="best-card salary">
+                <div class="card-icon"><i class="bi bi-cash-stack"></i></div>
+                <div class="card-title">薪资最优</div>
+                <div class="card-content">{{ comparison.best_for.salary | default('暂无') }}</div>
+            </div>
+            <div class="best-card stability">
+                <div class="card-icon"><i class="bi bi-building"></i></div>
+                <div class="card-title">稳定性最佳</div>
+                <div class="card-content">{{ comparison.best_for.stability | default('暂无') }}</div>
+            </div>
+            <div class="best-card growth">
+                <div class="card-icon"><i class="bi bi-graph-up"></i></div>
+                <div class="card-title">成长空间最大</div>
+                <div class="card-content">{{ comparison.best_for.growth | default('暂无') }}</div>
+            </div>
+            <div class="best-card culture">
+                <div class="card-icon"><i class="bi bi-star"></i></div>
+                <div class="card-title">文化氛围最好</div>
+                <div class="card-content">{{ comparison.best_for.culture | default('暂无') }}</div>
+            </div>
+            <div class="best-card balance">
+                <div class="card-icon"><i class="bi bi-balance-scale"></i></div>
+                <div class="card-title">工作生活平衡</div>
+                <div class="card-content">{{ comparison.best_for.work_life_balance | default('暂无') }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详细分析 -->
+    <div class="analysis-section">
+        <div class="section-header">
+            <h2>各公司详细分析</h2>
+            <div class="section-divider"></div>
+        </div>
+        
+        {% for analysis in comparison.detailed_analysis %}
+        <div class="analysis-card">
+            <div class="analysis-header">
+                <div class="company-info">
+                    <h3>{{ analysis.full_name | default(analysis.company) }}</h3>
+                    <span class="company-tag">简称: {{ analysis.company }}</span>
+                </div>
+            </div>
+            
+            <div class="analysis-body">
+                <div class="overview-box">
+                    <p>{{ analysis.overview | default('暂无公司概述') }}</p>
+                </div>
+                
+                <div class="pros-cons-grid">
+                    <div class="pros-box">
+                        <div class="box-header pros">
+                            <span class="box-icon">✓</span>
+                            <span class="box-title">优势</span>
+                        </div>
+                        <div class="box-content">
+                            {% if analysis.strengths is string %}
+                            <p>{{ analysis.strengths }}</p>
+                            {% elif analysis.strengths is iterable and analysis.strengths is not string %}
+                            <ul>
+                                {% for strength in analysis.strengths %}
+                                {% if strength is string and strength|length > 1 %}
+                                <li>{{ strength }}</li>
+                                {% endif %}
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p>暂无信息</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="cons-box">
+                        <div class="box-header cons">
+                            <span class="box-icon">✕</span>
+                            <span class="box-title">劣势</span>
+                        </div>
+                        <div class="box-content">
+                            {% if analysis.weaknesses is string %}
+                            <p>{{ analysis.weaknesses }}</p>
+                            {% elif analysis.weaknesses is iterable and analysis.weaknesses is not string %}
+                            <ul>
+                                {% for weakness in analysis.weaknesses %}
+                                {% if weakness is string and weakness|length > 1 %}
+                                <li>{{ weakness }}</li>
+                                {% endif %}
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p>暂无信息</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="career-box">
+                    <div class="box-header career">
+                        <span class="box-icon">🔮</span>
+                        <span class="box-title">职业前景</span>
+                    </div>
+                    <div class="box-content">
+                        <p>{{ analysis.career_outlook | default('暂无职业前景分析') }}</p>
+                    </div>
+                </div>
+                
+                <div class="fit-box">
+                    <div class="box-header fit">
+                        <span class="box-icon"><i class="bi bi-people"></i></span>
+                        <span class="box-title">适合人群</span>
+                    </div>
+                    <div class="box-content tags-container">
+                        {% if analysis.fit_for is string %}
+                        <span class="fit-tag">{{ analysis.fit_for }}</span>
+                        {% elif analysis.fit_for is iterable and analysis.fit_for is not string %}
+                        {% for fit in analysis.fit_for %}
+                        {% if fit is string and fit|length > 2 %}
+                        <span class="fit-tag">{{ fit }}</span>
+                        {% endif %}
+                        {% endfor %}
+                        {% else %}
+                        <span class="fit-tag">暂无信息</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 综合推荐 -->
+    <div class="recommendation-section">
+        <div class="recommendation-card">
+            <div class="rec-header">
+                <span class="rec-icon"><i class="bi bi-crosshair"></i></span>
+                <h3>综合推荐</h3>
+                <span class="rec-badge">AI个性化建议</span>
+            </div>
+            <div class="rec-content">
+                <p>{{ comparison.recommendation | default('暂无推荐建议') }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 风险警告 -->
+    {% if comparison.risk_warnings %}
+    <div class="risk-section">
+        <div class="risk-card">
+            <div class="risk-header">
+                <span class="risk-icon"><i class="bi bi-exclamation-triangle"></i></span>
+                <h3>风险警告</h3>
+            </div>
+            <div class="risk-content">
+                {% for warning in comparison.risk_warnings %}
+                <div class="risk-item">{{ warning }}</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 求职建议 -->
+    <div class="tips-section">
+        <div class="tips-card">
+            <div class="tips-header">
+                <span class="tips-icon"><i class="bi bi-lightbulb"></i></span>
+                <h3>求职建议</h3>
+            </div>
+            <div class="tips-content">
+                <ul>
+                    {% for tip in comparison.tips %}
+                    <li class="tip-item">{{ tip }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* 全局容器 */
+.compare-result-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--ink));
+}
+
+/* 标题区域 */
+.result-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    box-shadow: 0 10px 40px var(--shadow-md);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.header-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-icon svg {
+    color: white;
+}
+
+.result-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 5px 0;
+}
+
+.result-desc {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.badge-gradient {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* 区块头部 */
+.section-header {
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--ink));
+    margin: 0;
+}
+
+.section-divider {
+    height: 4px;
+    width: 60px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    border-radius: 2px;
+    margin-top: 8px;
+}
+
+/* 对比表格 */
+.table-section {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 20px var(--shadow-md);
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.compare-table th {
+    padding: 15px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--ink-secondary);
+    font-size: 0.9rem;
+}
+
+.sticky-col {
+    position: sticky;
+    left: 0;
+    background: var(--bg-alt);
+    z-index: 1;
+}
+
+.company-header {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.company-name {
+    font-weight: 700;
+    color: var(--ink));
+    font-size: 1rem;
+}
+
+.company-full {
+    font-size: 0.75rem;
+    color: var(--ink-secondary);
+}
+
+.data-row {
+    border-bottom: 1px solid var(--border));
+    transition: background 0.2s;
+}
+
+.data-row:hover {
+    background: var(--bg-alt));
+}
+
+.data-row:last-child {
+    border-bottom: none;
+}
+
+.dimension-cell {
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    color: var(--ink));
+    background: var(--bg-alt);
+}
+
+.dim-icon {
+    font-size: 1.1rem;
+}
+
+.data-value {
+    padding: 15px;
+    text-align: center;
+    color: var(--ink));
+}
+
+.highlight-row {
+    background: var(--bg-alt));
+}
+
+.salary-row {
+    background: var(--bg-alt);
+}
+
+/* 融资标签 */
+.funding-badge {
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.funding-badge.上市 {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.funding-badge.独角兽 {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+}
+
+.funding-badge.d轮, .funding-badge.c轮 {
+    background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+    color: white;
+}
+
+.funding-badge.b轮 {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.funding-badge.a轮 {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.funding-badge.未知 {
+    background: var(--bg-alt);
+    color: var(--ink-secondary);
+}
+
+/* 评分 */
+.rating-cell {
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    gap: 3px;
+}
+
+.rating-num {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.rating-max {
+    font-size: 0.9rem;
+    color: var(--ink-secondary);
+}
+
+/* 薪资 */
+.salary-value {
+    color: var(--success);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* 风险标签 */
+.risk-badge {
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.risk-badge.safe {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success);
+}
+
+.risk-badge.warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warning);
+}
+
+.risk-badge.danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+
+.risk-badge.unknown {
+    background: var(--bg-alt);
+    color: var(--ink-secondary);
+}
+
+/* 最佳选择卡片 */
+.best-section {
+    margin-bottom: 30px;
+}
+
+.best-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.best-card {
+    border-radius: 16px;
+    padding: 22px;
+    color: white;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+
+.best-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px var(--shadow-md);
+}
+
+.best-card.salary {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.best-card.stability {
+    background: linear-gradient(135deg, #F97316 0%, #EA580C 100%);
+}
+
+.best-card.growth {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.best-card.culture {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.best-card.balance {
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+}
+
+.card-icon {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+}
+
+.card-title {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.card-content {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+/* 详细分析卡片 */
+.analysis-section {
+    margin-bottom: 30px;
+}
+
+.analysis-card {
+    background: var(--surface);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px var(--shadow-md);
+    overflow: hidden;
+}
+
+.analysis-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    padding: 20px 25px;
+    color: white;
+}
+
+.company-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.company-info h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.company-tag {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px 14px;
+    border-radius: 15px;
+    font-size: 12px;
+}
+
+.analysis-body {
+    padding: 25px;
+}
+
+.overview-box {
+    background: var(--bg-alt));
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.overview-box p {
+    margin: 0;
+    color: var(--ink-secondary);
+    line-height: 1.7;
+}
+
+.pros-cons-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.pros-box, .cons-box {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.box-header {
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.box-header.pros {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+}
+
+.box-header.cons {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+}
+
+.box-header.career {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--info);
+}
+
+.box-header.fit {
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--primary);
+}
+
+.box-icon {
+    font-size: 1rem;
+}
+
+.box-content {
+    padding: 15px;
+    background: var(--surface);
+}
+
+.box-content ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style: none;
+}
+
+.box-content li {
+    padding: 6px 0;
+    position: relative;
+    color: var(--ink-secondary);
+}
+
+.box-content li::before {
+    content: "•";
+    position: absolute;
+    left: -15px;
+    color: var(--primary);
+}
+
+.box-content p {
+    margin: 0;
+    color: var(--ink-secondary);
+    line-height: 1.6;
+}
+
+.career-box, .fit-box {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 15px;
+    background: var(--bg-alt));
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.fit-tag {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+}
+
+/* 综合推荐 */
+.recommendation-section {
+    margin-bottom: 30px;
+}
+
+.recommendation-card {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    border-radius: 12px;
+    padding: 25px;
+    color: white;
+    box-shadow: 0 10px 40px var(--shadow-md);
+}
+
+.rec-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.rec-icon {
+    font-size: 1.4rem;
+}
+
+.rec-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.rec-badge {
+    margin-left: auto;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+}
+
+.rec-content p {
+    margin: 0;
+    line-height: 1.8;
+    font-size: 1rem;
+}
+
+/* 风险警告 */
+.risk-section {
+    margin-bottom: 30px;
+}
+
+.risk-card {
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 16px;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    overflow: hidden;
+}
+
+.risk-header {
+    background: var(--danger);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+}
+
+.risk-icon {
+    font-size: 1.2rem;
+}
+
+.risk-header h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.risk-content {
+    padding: 20px;
+}
+
+.risk-item {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+    font-size: 0.95rem;
+}
+
+.risk-item:last-child {
+    border-bottom: none;
+}
+
+/* 求职建议 */
+.tips-section {
+    margin-bottom: 30px;
+}
+
+.tips-card {
+    background: var(--bg-alt));
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.tips-header {
+    background: var(--bg-alt);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tips-icon {
+    font-size: 1.2rem;
+}
+
+.tips-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--ink));
+}
+
+.tips-content {
+    padding: 20px;
+}
+
+.tips-content ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tip-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border));
+    color: var(--ink-secondary);
+    font-size: 0.95rem;
+    padding-left: 25px;
+    position: relative;
+}
+
+.tip-item::before {
+    content: "<i class="bi bi-chat-quote"></i>";
+    position: absolute;
+    left: 0;
+}
+
+.tip-item:last-child {
+    border-bottom: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .result-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .header-content {
+        flex-direction: column;
+    }
+    
+    .pros-cons-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .company-info {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .best-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+    
+    .rec-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .rec-badge {
+        margin-left: 0;
+    }
+}
+</style>
+{% elif comparison and comparison.error %}
+<div class="error-container">
+    <div class="error-icon"><i class="bi bi-x-circle"></i></div>
+    <div class="error-message">{{ comparison.error }}</div>
+</div>
+<style>
+.error-container {
+    text-align: center;
+    padding: 50px;
+}
+.error-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}
+.error-message {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 20px;
+    border-radius: 12px;
+    font-size: 16px;
+}
+</style>
+{% else %}
+<div class="empty-container">
+    <div class="empty-icon"><i class="bi bi-journal-text"></i></div>
+    <div class="empty-message">请输入公司名称进行对比分析</div>
+</div>
+<style>
+.empty-container {
+    text-align: center;
+    padding: 50px;
+}
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}
+.empty-message {
+    background: #f3f4f6;
+    color: #6b7280;
+    padding: 20px;
+    border-radius: 12px;
+    font-size: 16px;
+}
+</style>
+{% endif %}

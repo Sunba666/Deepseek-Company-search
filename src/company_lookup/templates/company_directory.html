@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4" style="max-width:1100px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4><i class="bi bi-building me-2"></i>企业名录</h4>
+        <small class="text-muted">共 {{ total }} 家企业 · {{ total_pages }} 页</small>
+    </div>
+
+    <!-- 过滤栏 -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body py-2 d-flex align-items-center gap-3 flex-wrap">
+            <small class="text-muted">行业筛选：</small>
+            <a href="/companies" class="btn btn-sm {% if not selected_industry %}btn-primary{% else %}btn-outline-secondary{% endif %}">全部</a>
+            {% for ind in industries %}
+            <a href="/companies?industry={{ ind.name }}&page=1" class="btn btn-sm {% if selected_industry == ind.name %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                {{ ind.name }} ({{ ind.count }})
+            </a>
+            {% endfor %}
+            <div class="ms-auto">
+                <select class="form-select form-select-sm" onchange="location.href='/companies?sort='+this.value+'&page=1&industry={{ selected_industry }}'" style="width:auto;">
+                    <option value="name" {% if sort=='name' %}selected{% endif %}>按名称排序</option>
+                    <option value="newest" {% if sort=='newest' %}selected{% endif %}>按最新排序</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- 企业列表 -->
+    {% if companies %}
+    <div class="row g-2">
+        {% for c in companies %}
+        <div class="col-md-6">
+            <a href="/company/detail/{{ c.id }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100 match-card">
+                    <div class="card-body py-2">
+                        <div class="d-flex align-items-center">
+                            <strong>{{ c.name }}</strong>
+                            <small class="text-muted ms-2">{{ c.industry or '' }}</small>
+                            {% if c.city and c.city not in ('暂无公开数据','未公开','未知') %}
+                            <small class="text-muted ms-auto"><i class="bi bi-geo-alt"></i> {{ c.city }}</small>
+                            {% endif %}
+                        </div>
+                        {% if c.one_liner %}
+                        <small class="text-muted d-block mt-1">{{ c.one_liner[:80] }}</small>
+                        {% else %}
+                        <small class="text-muted d-block mt-1"><em>暂无简介</em></small>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 分页 -->
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                <a class="page-link" href="/companies?page={{ page-1 }}&sort={{ sort }}&industry={{ selected_industry }}">上一页</a>
+            </li>
+            {% set start = 1 if page <= 3 else page - 2 %}
+            {% set end = total_pages if page >= total_pages - 2 else page + 2 %}
+            {% if start > 1 %}
+            <li class="page-item"><a class="page-link" href="/companies?page=1&sort={{ sort }}&industry={{ selected_industry }}">1</a></li>
+            {% if start > 2 %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+            {% endif %}
+            {% for p in range(start, end + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="/companies?page={{ p }}&sort={{ sort }}&industry={{ selected_industry }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            {% if end < total_pages %}
+            {% if end < total_pages - 1 %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+            <li class="page-item"><a class="page-link" href="/companies?page={{ total_pages }}&sort={{ sort }}&industry={{ selected_industry }}">{{ total_pages }}</a></li>
+            {% endif %}
+            <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                <a class="page-link" href="/companies?page={{ page+1 }}&sort={{ sort }}&industry={{ selected_industry }}">下一页</a>
+            </li>
+        </ul>
+    </nav>
+    {% else %}
+    <div class="card shadow-sm">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="bi bi-emoji-frown" style="font-size:2rem;"></i>
+            <p class="mt-2">暂无企业数据</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.match-card { transition: transform 0.15s; cursor: pointer; border-left: 3px solid transparent; }
+.match-card:hover { transform: translateY(-2px); border-left-color: var(--primary, #0d6efd); }
+.pagination { gap: 2px; }
+</style>
+{% endblock %}
