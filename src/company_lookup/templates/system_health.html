@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4" style="max-width:1100px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="bi bi-heart-pulse me-2"></i>系统运行状态</h4>
+        <div>
+            <small class="text-muted me-2">更新于 {{ now[:19] }}</small>
+            <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> 刷新
+            </button>
+        </div>
+    </div>
+
+    <!-- 引擎状态总览 -->
+    <div class="row g-3 mb-4">
+        {% for eng in engines %}
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100" style="background:linear-gradient(135deg,{{ eng.bg_from }},{{ eng.bg_to }});">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1 fw-bold">{{ eng.name }}</h6>
+                            <small>{{ eng.description }}</small>
+                        </div>
+                        <span class="badge {% if eng.is_running %}bg-success{% else %}bg-danger{% endif %} fs-6 px-3 py-1">
+                            {{ '运行中' if eng.is_running else '已停止' }}
+                        </span>
+                    </div>
+                    <div class="mt-3 small">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span><i class="bi bi-arrow-up-circle"></i> 启动时间</span>
+                            <span>{{ eng.started_at or '未启动' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span><i class="bi bi-activity"></i> 累计操作</span>
+                            <span>{{ eng.ops }}</span>
+                        </div>
+                        {% if eng.detail %}
+                        <div class="mt-2 pt-2 border-top border-light">
+                            <small>{{ eng.detail }}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row g-4">
+        <!-- 知识库概览 -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><strong><i class="bi bi-database me-1"></i>知识库概览</strong></div>
+                <div class="card-body">
+                    <table class="table table-sm small mb-0">
+                        <tr>
+                            <td><i class="bi bi-building me-1"></i>收录企业</td>
+                            <td class="text-end fw-bold">{{ kb.total_companies }}</td>
+                        </tr>
+                        <tr>
+                            <td><i class="bi bi-check-circle me-1"></i>有数据企业</td>
+                            <td class="text-end fw-bold">{{ kb.companies_with_data }}</td>
+                        </tr>
+                        <tr>
+                            <td><i class="bi bi-robot me-1"></i>已蒸馏</td>
+                            <td class="text-end fw-bold">{{ report.with_distilled if report and report.with_distilled else '—' }}</td>
+                        </tr>
+                        <tr>
+                            <td><i class="bi bi-clock me-1"></i>待刷新 (>7天)</td>
+                            <td class="text-end fw-bold text-warning">{{ kb.stale_companies }}</td>
+                        </tr>
+                        <tr>
+                            <td><i class="bi bi-inbox me-1"></i>待处理任务</td>
+                            <td class="text-end fw-bold {% if kb.pending_tasks > 0 %}text-danger{% endif %}">{{ kb.pending_tasks }}</td>
+                        </tr>
+                        <tr>
+                            <td><i class="bi bi-search me-1"></i>热门公司数（有过查询）</td>
+                            <td class="text-end fw-bold">{{ kb.queried_companies }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 热度排行 -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><strong><i class="bi bi-fire me-1"></i>热门查询排行</strong></div>
+                <div class="card-body">
+                    {% if kb.top_queried %}
+                    <table class="table table-sm small mb-0">
+                        {% for item in kb.top_queried[:8] %}
+                        <tr>
+                            <td><span class="badge bg-secondary me-1">{{ loop.index }}</span></td>
+                            <td>{{ item.name }}</td>
+                            <td class="text-end"><span class="badge bg-primary">{{ item.count }} 次</span></td>
+                            <td style="width:30%;">
+                                {% set max_count = kb.top_queried[0].count if kb.top_queried else 1 %}
+                                <div class="progress" style="height:6px;">
+                                    <div class="progress-bar bg-warning" style="width:{{ (item.count / max_count * 100)|round }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    {% else %}
+                    <p class="text-muted small mb-0">暂无查询记录</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 数据新鲜度 -->
+        {% if report and report.freshness %}
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><strong><i class="bi bi-calendar-check me-1"></i>数据新鲜度</strong></div>
+                <div class="card-body">
+                    {% set total = report.freshness['fresh_≤7d'] + report.freshness['stale_7_30d'] + report.freshness['old_>30d'] %}
+                    {% set f_pct = (report.freshness['fresh_≤7d'] / total * 100)|round(1) if total > 0 else 0 %}
+                    {% set s_pct = (report.freshness['stale_7_30d'] / total * 100)|round(1) if total > 0 else 0 %}
+                    {% set o_pct = (report.freshness['old_>30d'] / total * 100)|round(1) if total > 0 else 0 %}
+                    <div class="mb-3">
+                        <div class="progress" style="height:24px;border-radius:12px;">
+                            <div class="progress-bar bg-success" style="width:{{ f_pct }}%">{{ report.freshness['fresh_≤7d'] }}</div>
+                            <div class="progress-bar bg-warning" style="width:{{ s_pct }}%">{{ report.freshness['stale_7_30d'] }}</div>
+                            <div class="progress-bar bg-danger" style="width:{{ o_pct }}%">{{ report.freshness['old_>30d'] }}</div>
+                        </div>
+                    </div>
+                    <table class="table table-sm small mb-0">
+                        <tr><td><span class="badge bg-success">≤7天</span> 新鲜</td><td class="text-end">{{ report.freshness['fresh_≤7d'] }} 家</td></tr>
+                        <tr><td><span class="badge bg-warning">7-30天</span> 渐旧</td><td class="text-end">{{ report.freshness['stale_7_30d'] }} 家</td></tr>
+                        <tr><td><span class="badge bg-danger">>30天</span> 过期</td><td class="text-end">{{ report.freshness['old_>30d'] }} 家</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 行业分布 -->
+        {% if report and report.industry_distribution %}
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><strong><i class="bi bi-pie-chart me-1"></i>行业分布</strong></div>
+                <div class="card-body">
+                    <table class="table table-sm small mb-0">
+                        {% for ind, cnt in report.industry_distribution.items() %}
+                        <tr>
+                            <td>{{ ind }}</td>
+                            <td class="text-end">{{ cnt }} 家</td>
+                            <td style="width:40%;">
+                                <div class="progress" style="height:8px;">
+                                    {% set pct = (cnt / report.total_companies * 100)|round(1) %}
+                                    <div class="progress-bar" style="width:{{ pct * 3 if pct * 3 <= 100 else 100 }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

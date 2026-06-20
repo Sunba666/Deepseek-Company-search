@@ -1268,6 +1268,60 @@ def admin_knowledge_health():
                            maintainer_status=ms)
 
 
+@bp.route("/admin/system")
+def admin_system_health():
+    """系统运行状态页面：三个后台引擎 + 知识库概览。"""
+    from datetime import datetime
+    from ..services.knowledge_maintainer import maintainer
+    from ..services.optimization_engine import optimizer
+    from ..services.discovery_engine import discovery_engine
+    from ..services.knowledge_db import knowledge_db
+
+    ms = maintainer.status()
+    os_ = optimizer.status()
+    ds = discovery_engine.status()
+    kb_stats = knowledge_db.stats()
+    report = maintainer._generate_health_report()
+
+    def _safe(ts):
+        return ts[:19] if ts and isinstance(ts, str) else str(ts) if ts else "—"
+
+    engines = [
+        {
+            "name": "知识库维护引擎",
+            "description": "每小时检查完整性·每6h刷新过期数据",
+            "bg_from": "#667eea", "bg_to": "#764ba2",
+            "is_running": ms.get("is_running", False),
+            "started_at": _safe(ms.get("started_at")),
+            "ops": f"已验证 {ms.get('verified',0)} 次，已刷新 {ms.get('refreshed',0)} 家",
+            "detail": f"队列 {ms.get('queue_size',0)} 个待验证 · 完整性修复 {ms.get('completeness_fixed',0)} 次",
+        },
+        {
+            "name": "永续优化引擎",
+            "description": "自动扫描并修复数据问题",
+            "bg_from": "#f093fb", "bg_to": "#f5576c",
+            "is_running": os_.get("is_running", False),
+            "started_at": _safe(os_.get("started_at")),
+            "ops": f"扫描 {os_.get('total_scans',0)} 次，修复 {os_.get('auto_fixed',0)} 个",
+            "detail": f"当前阶段: {os_.get('current_phase','idle')} · 上次扫描: {_safe(os_.get('last_scan_time'))}",
+        },
+        {
+            "name": "持续发现引擎",
+            "description": "自动发现并收录小众公司",
+            "bg_from": "#4facfe", "bg_to": "#00f2fe",
+            "is_running": ds.get("is_running", False),
+            "started_at": _safe(ds.get("started_at")),
+            "ops": f"已进行 {ds.get('total_rounds',0)} 轮发现，收录 {ds.get('total_added',0)} 家",
+            "detail": f"当前策略: {ds.get('next_strategy', '—')}",
+        },
+    ]
+
+    return render_template("system_health.html",
+                           engines=engines, kb=kb_stats,
+                           report=report, now=datetime.now().isoformat(),
+                           title="系统运行状态")
+
+
 # ========== 求职匹配 API ==========
 @bp.route("/api/job-match", methods=["POST"])
 def api_job_match():
