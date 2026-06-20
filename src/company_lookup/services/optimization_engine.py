@@ -105,15 +105,25 @@ class OptimizationEngine:
         """主循环：按顺序扫描各领域。"""
         scan_round = 0
         while not self._stop_event.is_set():
-            scan_round += 1
-            self._stats["current_phase"] = f"扫描第{scan_round}轮"
+            try:
+                scan_round += 1
+                self._stats["current_phase"] = f"扫描第{scan_round}轮"
 
-            # ── 快速预检（2分钟间隔）───────────────
-            self._quick_check()
+                # ── 快速预检（2分钟间隔）───────────────
+                self._quick_check()
 
-            # ── 全量扫描（10分钟间隔）───────────────
-            if scan_round % 5 == 1:
-                self._full_scan(scan_round)
+                # ── 全量扫描（10分钟间隔）───────────────
+                if scan_round % 5 == 1:
+                    self._full_scan(scan_round)
+            except Exception as e:
+                logger.exception(f"[Optimizer] 主循环异常: {e}")
+                self._stats["last_error"] = f"{type(e).__name__}: {e}"
+                self._stats["crash_count"] = self._stats.get("crash_count", 0) + 1
+                crash_count = self._stats["crash_count"]
+                backoff = min(10 * 3 ** (crash_count - 1), 300)
+                logger.warning(f"[Optimizer] 第 {crash_count} 次崩溃，{backoff}s 后重试")
+                self._stop_event.wait(backoff)
+                continue
 
             self._stop_event.wait(QUICK_CHECK_INTERVAL)
 

@@ -103,31 +103,42 @@ class KnowledgeMaintainer:
         last_health_report = 0
 
         while not self._stop_event.is_set():
-            now = time.time()
+            try:
+                now = time.time()
 
-            # 1. 处理验证队列（每10分钟）
-            if self._verify_queue and (now - last_completeness) % VERIFY_INTERVAL < 60:
-                self._process_verify_queue()
+                # 1. 处理验证队列（每10分钟）
+                if self._verify_queue and (now - last_completeness) % VERIFY_INTERVAL < 60:
+                    self._process_verify_queue()
 
-            # 2. 完整性检查（每小时）
-            if now - last_completeness > COMPLETENESS_INTERVAL:
-                self._check_completeness()
-                last_completeness = now
+                # 2. 完整性检查（每小时）
+                if now - last_completeness > COMPLETENESS_INTERVAL:
+                    self._check_completeness()
+                    last_completeness = now
 
-            # 3. 刷新过期数据（每6小时）
-            if now - last_stale_refresh > STALE_REFRESH_INTERVAL:
-                self._refresh_stale_companies()
-                last_stale_refresh = now
+                # 3. 刷新过期数据（每6小时）
+                if now - last_stale_refresh > STALE_REFRESH_INTERVAL:
+                    self._refresh_stale_companies()
+                    last_stale_refresh = now
 
-            # 4. 健康报告（每天）
-            if now - last_health_report > HEALTH_REPORT_INTERVAL:
-                report = self._generate_health_report()
-                self._stats["last_health_report"] = report
-                self._stats["reports"].append({
-                    "time": datetime.now().isoformat(),
-                    "report": report,
-                })
-                last_health_report = now
+                # 4. 健康报告（每天）
+                if now - last_health_report > HEALTH_REPORT_INTERVAL:
+                    report = self._generate_health_report()
+                    self._stats["last_health_report"] = report
+                    self._stats["reports"].append({
+                        "time": datetime.now().isoformat(),
+                        "report": report,
+                    })
+                    last_health_report = now
+            except Exception as e:
+                logger.exception(f"[Maintainer] 主循环异常: {e}")
+                self._stats["last_error"] = f"{type(e).__name__}: {e}"
+                self._stats["crash_count"] = self._stats.get("crash_count", 0) + 1
+                crash_count = self._stats["crash_count"]
+                # 指数退避：第一次 10s，然后 30s，然后 60s ...
+                backoff = min(10 * 3 ** (crash_count - 1), 300)
+                logger.warning(f"[Maintainer] 第 {crash_count} 次崩溃，{backoff}s 后重试")
+                self._stop_event.wait(backoff)
+                continue
 
             self._stop_event.wait(60)  # 每分钟唤醒一次
 

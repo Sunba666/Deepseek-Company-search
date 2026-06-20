@@ -1295,6 +1295,8 @@ def admin_system_health():
             "started_at": _safe(ms.get("started_at")),
             "ops": f"已验证 {ms.get('verified',0)} 次，已刷新 {ms.get('refreshed',0)} 家",
             "detail": f"队列 {ms.get('queue_size',0)} 个待验证 · 完整性修复 {ms.get('completeness_fixed',0)} 次",
+            "crash_count": ms.get("crash_count", 0),
+            "last_error": ms.get("last_error", None),
         },
         {
             "name": "永续优化引擎",
@@ -1304,6 +1306,8 @@ def admin_system_health():
             "started_at": _safe(os_.get("started_at")),
             "ops": f"扫描 {os_.get('total_scans',0)} 次，修复 {os_.get('auto_fixed',0)} 个",
             "detail": f"当前阶段: {os_.get('current_phase','idle')} · 上次扫描: {_safe(os_.get('last_scan_time'))}",
+            "crash_count": os_.get("crash_count", 0),
+            "last_error": os_.get("last_error", None),
         },
         {
             "name": "持续发现引擎",
