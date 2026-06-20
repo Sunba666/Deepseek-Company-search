@@ -409,24 +409,51 @@ class UnifiedDataService:
         return data
 
     def _populate_knowledge(self, company_name: str, report, raw_data: dict):
-        """将实时抓取的结果写入知识库。"""
+        """将实时抓取的结果写入知识库维度表 + 更新时间戳。
+
+        C 变体策略：
+        - 公司已在知识库中 → 用 API 返回的维度数据覆盖写入，更新 last_verified_at
+        - 公司不在知识库中 → 启动后台全量采集（原逻辑不变）
+        - 不动 distilled 数据（不触发 DeepSeek 重新蒸馏）
+        """
         from ..services.knowledge_collector import collect_company
 
-        # 如果知识库中还没有，进行采集
-        company = self.kd.find_company(company_name)
-        if company and self.kd.has_complete_data(company["id"], min_dimensions=1):
-            return  # 已有数据，不重复写入
+        # 反向映射：API 层 source_id → 知识库 data_type
+        _REVERSE_KEY_MAP = {
+            "tianyacha": "basic", "qichacha": "basic", "gsxt": "basic",
+            "tavily": "sentiment", "bing": "sentiment",
+            "wenshu": "risk", "qixinbao": "risk",
+        }
 
-        # 在后台线程填充
-        import threading
-        thread = threading.Thread(
-            target=collect_company,
-            args=(company_name,),
-            kwargs={"priority": 0},
-            daemon=True,
-        )
-        thread.start()
-        logger.info(f"[KNOWLEDGE POPULATE] 后台填充: {company_name}")
+        company = self.kd.find_company(company_name)
+        if not company:
+            # 新公司 → 后台全量采集（原逻辑不变）
+            logger.info(f"[KNOWLEDGE POPULATE] 新公司 {company_name}，启动后台采集")
+            import threading
+            thread = threading.Thread(
+                target=collect_company,
+                args=(company_name,),
+                kwargs={"priority": 0},
+                daemon=True,
+            )
+            thread.start()
+            return
+
+        company_id = company["id"]
+        written = 0
+        for source_id, data in raw_data.items():
+            dtype = _REVERSE_KEY_MAP.get(source_id, source_id)
+            if dtype in ("deepseek", "mock", "ai_summary"):
+                continue
+            self.kd.set_company_data(company_id, dtype, data,
+                                     source=source_id, confidence=0.7)
+            written += 1
+
+        if written > 0:
+            self.kd.update_verified_at(company_id)
+            logger.info(f"[KNOWLEDGE POPULATE] {company_name}: 更新 {written} 个维度 ✅")
+        else:
+            logger.info(f"[KNOWLEDGE POPULATE] {company_name}: 无有效维度写入")
 
     def invalidate_cache(self, company_name: Optional[str] = None):
         if company_name:

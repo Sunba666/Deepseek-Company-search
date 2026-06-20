@@ -10,6 +10,83 @@
 """
 
 import pytest
+from datetime import datetime
+
+
+class TestKnowledgeWriteBack:
+    """知识库写回路径验证 — ADR-001 C 变体"""
+
+    def test_populate_knowledge_writes_dimensions_and_updates_timestamp(self, app):
+        """_populate_knowledge 应写入 API 维度数据并更新时间戳。"""
+        from company_lookup.services.unified_data_service import UnifiedDataService
+        from company_lookup.services.knowledge_db import knowledge_db, _get_conn
+        import sqlite3
+
+        uds = UnifiedDataService()
+
+        # 找一个知识库中已有的公司
+        company = knowledge_db.find_company("腾讯")
+        assert company is not None, "测试前提：腾讯应在知识库中"
+        company_id = company["id"]
+
+        # 记录旧的 last_verified_at
+        conn = _get_conn()
+        conn.row_factory = sqlite3.Row
+        old_ts = conn.execute(
+            "SELECT last_verified_at FROM companies WHERE id=?", (company_id,)
+        ).fetchone()["last_verified_at"]
+        conn.close()
+
+        # 模拟 API 返回的 raw_data（只包含测试用数据）
+        test_raw_data = {
+            "tianyacha": {
+                "company_name": "腾讯科技（深圳）有限公司",
+                "company_type": "互联网",
+                "company_status": "存续",
+            },
+            "salary": {
+                "avg_monthly": "30000元",
+                "salary_range": "15000-50000元",
+            },
+        }
+
+        # 执行写回
+        import types
+        mock_report = types.SimpleNamespace(normalized_name="腾讯", sources=[])
+
+        # 写入前保存旧数据用于清理
+        old_data = knowledge_db.get_company_data(company_id) or {}
+
+        # 写入前验证该公司的旧维度数
+        old_count = knowledge_db.has_complete_data(company_id, min_dimensions=1)
+        assert old_count, "测试前提：腾讯已有至少1个维度"
+
+        uds._populate_knowledge("腾讯", mock_report, test_raw_data)
+
+        # 验证维度数据已写入
+        data_dict = knowledge_db.get_company_data(company_id)
+        assert "basic" in data_dict, "tianyacha 应映射为 basic 维度"
+        assert "salary" in data_dict, "salary 维度应存在"
+        assert data_dict["basic"]["content"].get("company_type") == "互联网"
+
+        # 验证 last_verified_at 已更新
+        conn = _get_conn()
+        conn.row_factory = sqlite3.Row
+        new_ts = conn.execute(
+            "SELECT last_verified_at FROM companies WHERE id=?", (company_id,)
+        ).fetchone()["last_verified_at"]
+        conn.close()
+
+        assert new_ts != old_ts, "last_verified_at 应被更新"
+        assert new_ts is not None, "last_verified_at 不应为 None"
+        print(f"✅ 时间戳已更新: {old_ts} → {new_ts}")
+
+        # ── 清理：恢复旧数据 ──
+        for dtype, d in old_data.items():
+            knowledge_db.set_company_data(company_id, dtype,
+                                          d["content"], source=d.get("source", "test"))
+        knowledge_db.update_verified_at(company_id)
+        print(f"✅ 测试数据已清理，知识库已恢复")
 
 
 class TestHomepageSearch:

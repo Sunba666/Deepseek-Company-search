@@ -392,6 +392,18 @@ class KnowledgeDB:
         finally:
             conn.close()
 
+    def update_verified_at(self, company_id: int):
+        """更新公司最后验证时间戳，使知识库新鲜度判断生效。"""
+        conn = _get_conn()
+        try:
+            conn.execute(
+                "UPDATE companies SET last_verified_at = CURRENT_TIMESTAMP WHERE id = ?",
+                (company_id,)
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
     def get_distilled(self, company_id: int) -> Optional[Dict]:
         """获取蒸馏数据（如果存在）。"""
         conn = _get_conn()
