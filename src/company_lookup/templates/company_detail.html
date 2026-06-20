@@ -18,6 +18,13 @@
                     <h4 class="mb-1">{{ company.canonical_name }}</h4>
                     <p class="text-muted mb-2" style="font-size:1.05rem;">{{ one_liner or '暂无简介' }}</p>
 
+                    <div class="mb-2">
+                        <button id="favBtn" class="btn btn-sm {% if is_favorited %}btn-warning{% else %}btn-outline-warning{% endif %}"
+                                onclick="toggleFavorite()">
+                            <i id="favIcon" class="bi {% if is_favorited %}bi-star-fill{% else %}bi-star{% endif %}"></i>
+                            <span id="favText">{% if is_favorited %}已关注{% else %}关注{% endif %}</span>
+                        </button>
+
                     {% if company.industry or company.city or company.province %}
                     <div class="mb-2">
                         {% if company.industry %}<span class="badge bg-info me-1">{{ company.industry }}</span>{% endif %}
@@ -169,4 +176,34 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const COMPANY_ID = {{ company.id }};
+const COMPANY_NAME = "{{ company.canonical_name }}";
+
+function toggleFavorite() {
+    fetch('/api/favorites/toggle', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({company_id: COMPANY_ID, company_name: COMPANY_NAME})
+    })
+    .then(r => r.json())
+    .then(data => {
+        const btn = document.getElementById('favBtn');
+        const icon = document.getElementById('favIcon');
+        const text = document.getElementById('favText');
+        if (data.favorited) {
+            btn.className = 'btn btn-sm btn-warning';
+            icon.className = 'bi bi-star-fill';
+            text.textContent = '已关注';
+        } else {
+            btn.className = 'btn btn-sm btn-outline-warning';
+            icon.className = 'bi bi-star';
+            text.textContent = '关注';
+        }
+    });
+}
+</script>
 {% endblock %}

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import io
+import os
 import re
 import logging
 import json
@@ -1523,6 +1524,10 @@ def company_detail(company_id):
 
         company = dict(row)
 
+        # 检查是否已收藏
+        favorites = [f for f in _load_favorites() if str(f.get("id")) == str(company_id)]
+        is_favorited = len(favorites) > 0
+
         # 获取蒸馏数据
         distilled = knowledge_db.get_distilled(company_id)
         if not distilled:
@@ -1537,7 +1542,8 @@ def company_detail(company_id):
                                        has_distilled=False,
                                        basic=basic,
                                        ai_summary=ai_summary,
-                                       title=company.get("canonical_name", ""))
+                                       title=company.get("canonical_name", ""),
+                                       is_favorited=is_favorited)
             return render_template("error.html", message="该公司暂无数据"), 404
 
         kf = distilled.get("key_facts", {})
@@ -1549,7 +1555,8 @@ def company_detail(company_id):
                                sentiments=distilled.get("sentiment_top3", []),
                                risk_summary=distilled.get("risk_summary", ""),
                                job_seeker_note=distilled.get("job_seeker_note", ""),
-                               title=company.get("canonical_name", ""))
+                               title=company.get("canonical_name", ""),
+                               is_favorited=is_favorited)
     except Exception as e:
         logger.error(f"公司详情加载失败: company_id={company_id}, {e}")
         return render_template("error.html", message="公司详情加载失败"), 500
@@ -1588,3 +1595,80 @@ def api_optimizer_scan_now():
         optimizer._full_scan(optimizer._stats["total_scans"] + 1)
     threading.Thread(target=_run_scan, daemon=True).start()
     return jsonify({"code": 0, "message": "全量扫描已触发"})
+
+
+# ========== 公司收藏（我的关注） ==========
+
+_FAVORITES_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+    'data', 'favorites.json')
+
+
+def _load_favorites() -> list:
+    """从 JSON 文件加载收藏列表。"""
+    if not os.path.exists(_FAVORITES_PATH):
+        return []
+    try:
+        with open(_FAVORITES_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (json.JSONDecodeError, FileNotFoundError):
+        return []
+
+
+def _save_favorites(favorites: list):
+    """保存收藏列表到 JSON 文件。"""
+    os.makedirs(os.path.dirname(_FAVORITES_PATH), exist_ok=True)
+    with open(_FAVORITES_PATH, 'w', encoding='utf-8') as f:
+        json.dump(favorites, f, ensure_ascii=False, indent=2)
+
+
+@bp.route("/favorites")
+def favorites_page():
+    """我的关注页面。"""
+    favorites = _load_favorites()
+    return render_template("favorites.html", favorites=favorites,
+                           title="我的关注")
+
+
+@bp.route("/api/favorites", methods=["GET"])
+def api_favorites_list():
+    """获取收藏列表（JSON）。"""
+    return jsonify({"code": 0, "data": _load_favorites()})
+
+
+@bp.route("/api/favorites/toggle", methods=["POST"])
+def api_favorites_toggle():
+    """切换收藏状态。请求: {company_id, company_name, industry, city}"""
+    data = request.get_json(silent=True) or {}
+    company_id = data.get("company_id") or data.get("id")
+    company_name = data.get("company_name") or data.get("name", "")
+
+    if not company_id or not company_name:
+        return jsonify({"code": 1, "message": "缺少公司信息"})
+
+    favorites = _load_favorites()
+    existing = [f for f in favorites if str(f.get("id")) == str(company_id)]
+
+    if existing:
+        favorites = [f for f in favorites if str(f.get("id")) != str(company_id)]
+        _save_favorites(favorites)
+        return jsonify({"code": 0, "favorited": False, "message": f"已取消关注 {company_name}"})
+    else:
+        favorites.append({
+            "id": company_id,
+            "name": company_name,
+            "industry": data.get("industry", ""),
+            "city": data.get("city", ""),
+            "added_at": datetime.now().isoformat()[:19],
+        })
+        _save_favorites(favorites)
+        return jsonify({"code": 0, "favorited": True, "message": f"已关注 {company_name}"})
+
+
+@bp.route("/api/favorites/check", methods=["POST"])
+def api_favorites_check():
+    """检查公司是否已收藏。请求: {company_id}"""
+    company_id = request.get_json(silent=True).get("company_id")
+    favorites = _load_favorites()
+    is_fav = any(str(f.get("id")) == str(company_id) for f in favorites)
+    return jsonify({"code": 0, "favorited": is_fav})
