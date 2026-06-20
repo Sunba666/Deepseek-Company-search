@@ -1,0 +1,1316 @@
+{
+  "company_names": [
+    "米哈游",
+    "米哈游科技",
+    "悠星网络",
+    "悠星",
+    "悠星网络科技",
+    "鹰角网络",
+    "鹰角",
+    "柠檬微趣",
+    "腾讯",
+    "腾讯控股",
+    "腾讯科技",
+    "字节跳动",
+    "字节跳动科技",
+    "阿里巴巴",
+    "阿里",
+    "阿里巴巴集团",
+    "华为",
+    "华为技术",
+    "小米",
+    "小米科技",
+    "美团",
+    "美团点评",
+    "京东",
+    "京东集团",
+    "百度",
+    "百度公司",
+    "网易",
+    "网易公司",
+    "拼多多",
+    "拼多多集团",
+    "快手",
+    "快手科技",
+    "滴滴",
+    "滴滴出行",
+    "携程",
+    "携程旅行",
+    "小红书",
+    "小红书科技",
+    "蚂蚁集团",
+    "支付宝",
+    "微信",
+    "微信支付",
+    "新浪",
+    "新浪微博",
+    "搜狐",
+    "搜狐公司",
+    "网易",
+    "网易游戏",
+    "盛大",
+    "盛大游戏",
+    "完美世界",
+    "完美游戏",
+    "巨人网络",
+    "三七互娱",
+    "吉比特",
+    "心动网络",
+    "B站",
+    "哔哩哔哩",
+    "爱奇艺",
+    "爱奇艺视频",
+    "腾讯视频",
+    "优酷",
+    "优酷视频",
+    "芒果TV",
+    "快手",
+    "快手短视频",
+    "抖音",
+    "抖音短视频",
+    "腾讯音乐",
+    "QQ音乐",
+    "网易云音乐",
+    "喜马拉雅",
+    "阅文集团",
+    "起点中文网",
+    "晋江文学城",
+    "腾讯新闻",
+    "今日头条",
+    "澎湃新闻",
+    "财新网",
+    "界面新闻",
+    "虎嗅",
+    "36氪",
+    "创业邦",
+    "钛媒体",
+    "爱分析",
+    "动脉网",
+    "投中",
+    "清科",
+    "IT桔子",
+    "猎云网",
+    "亿欧",
+    "砍柴网",
+    "Donews",
+    "TechWeb",
+    "中关村在线",
+    "太平洋电脑网",
+    "手机中国",
+    "爱范儿",
+    "果壳网",
+    "知乎",
+    "豆瓣",
+    "小红书",
+    "脉脉",
+    "领英",
+    "领英中国",
+    "拉勾",
+    "拉勾网",
+    "BOSS直聘",
+    "智联招聘",
+    "前程无忧",
+    "看准网",
+    "职友集",
+    "玻璃门",
+    "职查查",
+    "天眼查",
+    "企查查",
+    "启信宝",
+    "国家企业信用信息公示系统",
+    "中国裁判文书网",
+    "中国执行信息公开网",
+    "信用中国",
+    "黑猫投诉",
+    "聚投诉",
+    "12315",
+    "中国互联网违法和不良信息举报中心",
+    "扫黄打非",
+    "网信办",
+    "工信部",
+    "商务部",
+    "发改委",
+    "证监会",
+    "银保监会",
+    "央行",
+    "财政部",
+    "税务总局",
+    "海关总署",
+    "统计局",
+    "知识产权局",
+    "专利局",
+    "商标局",
+    "版权局",
+    "工信部",
+    "科技部",
+    "教育部",
+    "人社部",
+    "民政部",
+    "司法部",
+    "最高人民法院",
+    "最高人民检察院",
+    "公安部",
+    "安全部",
+    "国防部",
+    "外交部",
+    "发改委",
+    "财政部",
+    "商务部",
+    "文化部",
+    "卫健委",
+    "环保部",
+    "自然资源部",
+    "住建部",
+    "交通部",
+    "水利部",
+    "农业农村部",
+    "林业局",
+    "气象局",
+    "地震局",
+    "航天局",
+    "原子能机构",
+    "国家电网",
+    "南方电网",
+    "中国石油",
+    "中国石化",
+    "中国海油",
+    "中粮集团",
+    "中储粮",
+    "中国烟草",
+    "中国邮政",
+    "中国电信",
+    "中国移动",
+    "中国联通",
+    "中国铁塔",
+    "中国广电",
+    "中信集团",
+    "光大集团",
+    "中投公司",
+    "国投集团",
+    "华润集团",
+    "招商局",
+    "港中旅",
+    "中旅集团",
+    "中国建筑",
+    "中国中铁",
+    "中国铁建",
+    "中国交建",
+    "中国电建",
+    "中国能建",
+    "中国中冶",
+    "中国五矿",
+    "中国铝业",
+    "中国黄金",
+    "中国建材",
+    "中国中化",
+    "中国化工",
+    "国药集团",
+    "中国医药",
+    "中国船舶",
+    "中国重工",
+    "中国航天",
+    "中国航空",
+    "中国商飞",
+    "中国兵器",
+    "中国核工业",
+    "中国电科",
+    "中国电子",
+    "中国普天",
+    "中国中车",
+    "中国通号",
+    "中国中铁",
+    "中国铁建",
+    "中国交建",
+    "中国建筑",
+    "中国能建",
+    "中国电建",
+    "中国中冶",
+    "中国五矿",
+    "中国铝业",
+    "中国黄金",
+    "中国建材",
+    "中国中化",
+    "中国化工",
+    "国药集团",
+    "中国医药",
+    "中国船舶",
+    "中国重工",
+    "中国航天",
+    "中国航空",
+    "中国商飞",
+    "中国兵器",
+    "中国核工业",
+    "中国电科",
+    "中国电子",
+    "中国普天",
+    "中国中车",
+    "中国通号"
+  ],
+  "company_keywords": {
+    "腾讯": {
+      "name": "腾讯控股有限公司",
+      "english_name": "Tencent Holdings Limited",
+      "industry": "互联网",
+      "sub_industry": "社交/游戏",
+      "scale": "10000人以上",
+      "established_year": "1998",
+      "registered_capital": "65000万人民币",
+      "business_scope": "互联网服务、社交网络、游戏开发",
+      "headquarters": "广东省深圳市",
+      "funding_status": "上市",
+      "stock_code": "HKEX:00700",
+      "website": "https://www.tencent.com",
+      "careers_url": "https://careers.tencent.com",
+      "key_products": [
+        "微信",
+        "QQ",
+        "王者荣耀",
+        "和平精英"
+      ],
+      "competitors": [
+        "阿里巴巴",
+        "字节跳动"
+      ],
+      "market_position": "中国互联网行业龙头企业",
+      "recent_news": "近期发布了多款新游戏产品",
+      "salary": {
+        "avg_monthly": "28000元",
+        "salary_range": "15000-50000元",
+        "year_end_bonus": "3-6个月",
+        "salary_adjustment": "一年两次",
+        "benefits": [
+          "五险一金",
+          "补充医疗保险",
+          "免费班车",
+          "健身房",
+          "游戏内购折扣"
+        ]
+      },
+      "reputation": {
+        "overall_rating": "4.2/5",
+        "recommendation_rate": "78%",
+        "ceo_approval_rate": "90%",
+        "pros": [
+          "福利完善",
+          "团队氛围好",
+          "技术积累深厚",
+          "内部转岗机会多"
+        ],
+        "cons": [
+          "部分项目加班严重",
+          "晋升竞争激烈",
+          "流程逐渐变复杂"
+        ],
+        "culture_keywords": [
+          "用户为本",
+          "科技向善",
+          "赛马机制",
+          "游戏化"
+        ]
+      },
+      "interview": {
+        "interview_difficulty": "中等偏上",
+        "interview_rounds": "3-4轮",
+        "positive_rate": "25%",
+        "avg_interview_duration": "1.5小时",
+        "common_questions": [
+          "为什么选择腾讯？",
+          "介绍一个你参与的最有挑战性的项目",
+          "如何处理项目中的技术难题？",
+          "你对游戏行业的看法？",
+          "如何保证代码质量？"
+        ],
+        "common_answers": {
+          "为什么选择腾讯？": "腾讯拥有丰富的用户场景和技术积累，在社交和游戏领域处于领先地位，我希望能够在这样的平台上发挥自己的技术能力。",
+          "介绍一个你参与的最有挑战性的项目": "我参与过一个高并发系统的重构项目，通过引入分布式缓存和异步处理，将系统吞吐量提升了300%。",
+          "如何处理项目中的技术难题？": "首先分析问题根源，查阅相关文档和社区解决方案，与团队讨论后制定实施方案，最后进行充分测试验证。",
+          "你对游戏行业的看法？": "游戏行业正在从娱乐向多元化发展，元宇宙和云游戏是未来的重要方向，技术创新将持续推动行业发展。",
+          "如何保证代码质量？": "通过代码审查、单元测试、自动化测试等手段，同时遵循团队的编码规范和最佳实践。"
+        },
+        "interview_tips": [
+          "深入了解腾讯产品",
+          "准备项目细节",
+          "展示技术深度",
+          "了解游戏行业"
+        ]
+      },
+      "labor_risk": {
+        "risk_level": "低",
+        "risk_analysis": "公司劳动合规情况良好，无重大风险记录。",
+        "risk_items": []
+      }
+    },
+    "字节跳动": {
+      "name": "北京字节跳动科技有限公司",
+      "english_name": "ByteDance",
+      "industry": "互联网",
+      "sub_industry": "内容/短视频",
+      "scale": "10000人以上",
+      "established_year": "2012",
+      "registered_capital": "10000万人民币",
+      "business_scope": "短视频、资讯、教育",
+      "headquarters": "北京市",
+      "funding_status": "上市",
+      "stock_code": "HKEX:9961",
+      "website": "https://www.bytedance.com",
+      "careers_url": "https://jobs.bytedance.com",
+      "key_products": [
+        "抖音",
+        "今日头条",
+        "TikTok"
+      ],
+      "competitors": [
+        "腾讯",
+        "快手"
+      ],
+      "market_position": "全球短视频行业领导者",
+      "recent_news": "TikTok在全球用户突破10亿",
+      "salary": {
+        "avg_monthly": "30000元",
+        "salary_range": "18000-55000元",
+        "year_end_bonus": "4-8个月",
+        "salary_adjustment": "一年两次",
+        "benefits": [
+          "六险一金",
+          "房补",
+          "餐补",
+          "年度体检",
+          "学习基金"
+        ]
+      },
+      "reputation": {
+        "overall_rating": "4.0/5",
+        "recommendation_rate": "72%",
+        "ceo_approval_rate": "85%",
+        "pros": [
+          "薪资竞争力强",
+          "成长空间大",
+          "扁平化管理",
+          "国际化视野"
+        ],
+        "cons": [
+          "工作节奏快",
+          "KPI压力大",
+          "部分岗位加班多"
+        ],
+        "culture_keywords": [
+          "始终创业",
+          "坦诚清晰",
+          "多元兼容",
+          "追求极致"
+        ]
+      },
+      "interview": {
+        "interview_difficulty": "较高",
+        "interview_rounds": "3-5轮",
+        "positive_rate": "20%",
+        "avg_interview_duration": "2小时",
+        "common_questions": [
+          "为什么选择字节跳动？",
+          "介绍一个你最满意的项目",
+          "如何处理数据量较大的场景？",
+          "你对短视频行业的理解？",
+          "如何应对快速变化的业务需求？"
+        ],
+        "common_answers": {
+          "为什么选择字节跳动？": "字节跳动以技术驱动产品增长，在内容推荐和短视频领域有深厚积累，我希望能在高速成长的环境中快速提升自己。",
+          "介绍一个你最满意的项目": "我负责过一个推荐系统的优化项目，通过改进算法模型，将用户点击率提升了25%。",
+          "如何处理数据量较大的场景？": "采用分布式计算框架、数据分片、缓存策略等方式来处理大规模数据。",
+          "你对短视频行业的理解？": "短视频已经成为重要的内容消费形式，算法推荐和内容生态是核心竞争力，全球化是重要趋势。",
+          "如何应对快速变化的业务需求？": "保持敏捷开发，注重代码模块化和可扩展性，及时与产品团队沟通理解需求变化。"
+        },
+        "interview_tips": [
+          "关注算法和数据",
+          "准备系统设计",
+          "展示学习能力",
+          "了解推荐系统"
+        ]
+      },
+      "labor_risk": {
+        "risk_level": "低",
+        "risk_analysis": "公司劳动合规情况良好，注重员工福利保障。",
+        "risk_items": []
+      }
+    },
+    "阿里巴巴": {
+      "name": "阿里巴巴集团控股有限公司",
+      "english_name": "Alibaba Group",
+      "industry": "互联网",
+      "sub_industry": "电商/云计算",
+      "scale": "10000人以上",
+      "established_year": "1999",
+      "registered_capital": "100000万人民币",
+      "business_scope": "电子商务、云计算、数字媒体",
+      "headquarters": "浙江省杭州市",
+      "funding_status": "上市",
+      "stock_code": "NYSE:BABA",
+      "website": "https://www.alibaba.com",
+      "careers_url": "https://talent.alibaba.com",
+      "key_products": [
+        "淘宝",
+        "天猫",
+        "阿里云"
+      ],
+      "competitors": [
+        "京东",
+        "拼多多"
+      ],
+      "market_position": "中国电商行业龙头",
+      "recent_news": "阿里云市场份额持续增长",
+      "salary": {
+        "avg_monthly": "26000元",
+        "salary_range": "14000-45000元",
+        "year_end_bonus": "2-6个月",
+        "salary_adjustment": "一年一次",
+        "benefits": [
+          "五险一金",
+          "房补",
+          "餐补",
+          "节日福利",
+          "阿里日活动"
+        ]
+      },
+      "reputation": {
+        "overall_rating": "4.1/5",
+        "recommendation_rate": "75%",
+        "ceo_approval_rate": "88%",
+        "pros": [
+          "平台大机会多",
+          "技术体系完善",
+          "企业文化好",
+          "晋升体系透明"
+        ],
+        "cons": [
+          "部分业务加班较多",
+          "层级较多",
+          "流程较长"
+        ],
+        "culture_keywords": [
+          "客户第一",
+          "团队合作",
+          "拥抱变化",
+          "诚信"
+        ]
+      },
+      "interview": {
+        "interview_difficulty": "中等偏上",
+        "interview_rounds": "3-4轮",
+        "positive_rate": "28%",
+        "avg_interview_duration": "1.5小时",
+        "common_questions": [
+          "为什么选择阿里巴巴？",
+          "介绍一个复杂业务系统的设计经验",
+          "如何处理高并发场景？",
+          "你对电商行业的理解？",
+          "如何与业务方协作？"
+        ],
+        "common_answers": {
+          "为什么选择阿里巴巴？": "阿里巴巴在电商和云计算领域有深厚积累，业务场景丰富，能够提供广阔的发展空间和技术挑战。",
+          "介绍一个复杂业务系统的设计经验": "我参与过电商订单系统的设计，通过分布式架构和消息队列保证系统的高可用和扩展性。",
+          "如何处理高并发场景？": "通过负载均衡、缓存策略、异步处理、数据库优化等方式来应对高并发。",
+          "你对电商行业的理解？": "电商正在从交易平台向新零售和数字商业演进，技术驱动和数据智能是关键。",
+          "如何与业务方协作？": "建立良好的沟通机制，深入理解业务需求，提供技术方案支持业务目标达成。"
+        },
+        "interview_tips": [
+          "准备电商场景",
+          "了解分布式系统",
+          "展示业务理解",
+          "了解阿里云"
+        ]
+      },
+      "labor_risk": {
+        "risk_level": "低",
+        "risk_analysis": "公司劳动合规情况良好，员工权益保障完善。",
+        "risk_items": []
+      }
+    },
+    "华为": {
+      "name": "华为技术有限公司",
+      "english_name": "Huawei Technologies",
+      "industry": "通信",
+      "sub_industry": "5G/智能手机",
+      "scale": "10000人以上",
+      "established_year": "1987",
+      "registered_capital": "405000万人民币",
+      "business_scope": "通信设备、智能手机、云计算",
+      "headquarters": "广东省深圳市",
+      "funding_status": "未上市",
+      "stock_code": "-",
+      "website": "https://www.huawei.com",
+      "careers_url": "https://career.huawei.com",
+      "key_products": [
+        "Mate系列手机",
+        "5G设备",
+        "HarmonyOS"
+      ],
+      "competitors": [
+        "苹果",
+        "三星",
+        "爱立信"
+      ],
+      "market_position": "全球领先的ICT基础设施提供商",
+      "recent_news": "发布新一代麒麟芯片",
+      "salary": {
+        "avg_monthly": "25000元",
+        "salary_range": "12000-40000元",
+        "year_end_bonus": "1-4个月",
+        "salary_adjustment": "一年一次",
+        "benefits": [
+          "六险一金",
+          "班车",
+          "餐补",
+          "购房补贴",
+          "员工持股"
+        ]
+      },
+      "reputation": {
+        "overall_rating": "4.3/5",
+        "recommendation_rate": "82%",
+        "ceo_approval_rate": "92%",
+        "pros": [
+          "技术实力强",
+          "研发投入大",
+          "薪酬竞争力强",
+          "民族自豪感"
+        ],
+        "cons": [
+          "工作强度大",
+          "出差频繁",
+          "海外派遣多"
+        ],
+        "culture_keywords": [
+          "以客户为中心",
+          "以奋斗者为本",
+          "长期艰苦奋斗",
+          "自我批判"
+        ]
+      },
+      "interview": {
+        "interview_difficulty": "较高",
+        "interview_rounds": "3-5轮",
+        "positive_rate": "18%",
+        "avg_interview_duration": "2小时",
+        "common_questions": [
+          "为什么选择华为？",
+          "介绍一个攻克技术难题的经历",
+          "如何看待技术创新？",
+          "你对通信行业的理解？",
+          "是否接受海外派遣？"
+        ],
+        "common_answers": {
+          "为什么选择华为？": "华为在通信领域技术领先，注重研发投入，我希望能够参与到核心技术的研发中。",
+          "介绍一个攻克技术难题的经历": "我曾带领团队解决了一个性能瓶颈问题，通过深入分析和优化算法，将系统响应时间降低了60%。",
+          "如何看待技术创新？": "技术创新是企业发展的核心动力，需要持续投入和人才培养，同时注重知识产权保护。",
+          "你对通信行业的理解？": "5G正在推动万物互联，通信技术正在从连接向智能演进，算力网络是未来方向。",
+          "是否接受海外派遣？": "我愿意接受海外派遣，这是宝贵的国际工作经验，能够提升我的跨文化沟通能力。"
+        },
+        "interview_tips": [
+          "准备通信知识",
+          "展示技术深度",
+          "了解企业文化",
+          "体能准备"
+        ]
+      },
+      "labor_risk": {
+        "risk_level": "低",
+        "risk_analysis": "公司劳动合规情况良好，注重员工发展和激励。",
+        "risk_items": []
+      }
+    },
+    "悠星": {
+      "name": "悠星网络科技有限公司",
+      "english_name": "Yostar Networks Technology Co., Ltd.",
+      "industry": "游戏",
+      "sub_industry": "二次元游戏/出海",
+      "scale": "500-2000人",
+      "established_year": "2014",
+      "registered_capital": "5000万元人民币",
+      "business_scope": "网络游戏开发、发行、运营",
+      "headquarters": "上海市浦东新区",
+      "funding_status": "未上市",
+      "stock_code": "",
+      "website": "https://www.yostar.jp",
+      "careers_url": "",
+      "key_products": [
+        "明日方舟",
+        "蔚蓝档案",
+        "碧蓝航线(日服)"
+      ],
+      "competitors": [
+        "米哈游",
+        "鹰角网络"
+      ],
+      "market_position": "中国二次元游戏出海领先企业",
+      "recent_news": "旗下《明日方舟》和《蔚蓝档案》在日本市场表现优异",
+      "salary": {
+        "avg_monthly": "20k-35k",
+        "salary_range": "15k-45k",
+        "year_end_bonus": "13-16薪",
+        "salary_adjustment": "每年1次调薪",
+        "benefits": [
+          "五险一金",
+          "补充医疗",
+          "带薪年假",
+          "加班补贴"
+        ]
+      },
+      "reputation": {
+        "overall_rating": 3.8,
+        "recommendation_rate": "68%",
+        "ceo_approval_rate": "80%",
+        "pros": [
+          "出海业务前景好",
+          "团队年轻",
+          "项目成功"
+        ],
+        "cons": [
+          "规模较小",
+          "国内知名度不高"
+        ],
+        "culture_keywords": [
+          "二次元",
+          "国际化",
+          "创业氛围"
+        ]
+      },
+      "interview": {
+        "interview_difficulty": "中等",
+        "interview_rounds": "3-4轮",
+        "positive_rate": "70%",
+        "avg_interview_duration": "1-2周",
+        "common_questions": [
+          "项目经验",
+          "技术基础",
+          "日语能力",
+          "游戏理解"
+        ],
+        "common_answers": [
+          "展示语言能力优势",
+          "体现对二次元文化的理解"
+        ],
+        "interview_tips": [
+          "了解日本游戏市场",
+          "展示跨文化交流能力"
+        ]
+      },
+      "labor_risk": {
+        "risk_level": "低",
+        "risk_analysis": "公司劳动合规情况良好",
+        "risk_items": []
+      },
+      "overall_score": 72
+    },
+    "柠檬微趣": {
+      "name": "北京柠檬微趣科技股份有限公司",
+      "english_name": "Beijing Lemon Micro Fun Technology Co., Ltd.",
+      "industry": "游戏",
+      "sub_industry": "休闲游戏/社交游戏",
+      "scale": "200-500人",
+      "established_year": "2008",
+      "registered_capital": "1000万元人民币",
+      "business_scope": "游戏开发、手机游戏发行、互联网技术服务",
+      "headquarters": "北京市海淀区",
+      "funding_status": "未上市",
+      "stock_code": "",
+      "website": "",
+      "key_products": [
+        "宾果消消消",
+        "梦幻花园",
+        "梦幻家园"
+      ],
+      "competitors": [
+        "腾讯",
+        "网易"
+      ],
+      "market_position": "国内休闲游戏领域知名开发商",
+      "recent_news": "旗下产品《宾果消消消》持续运营中",
+      "salary": {
+        "avg_monthly": "15k-30k",
+        "salary_range": "12k-40k",
+        "year_end_bonus": "13-15薪",
+        "salary_adjustment": "每年1次调薪",
+        "benefits": [
+          "五险一金",
+          "补充医疗",
+          "带薪年假",
+          "弹性工作"
+        ]
+      },
+      "reputation": {
+        "overall_rating": 3.6,
+        "recommendation_rate": "65%",
+        "ceo_approval_rate": "78%",
+        "pros": [
+          "项目稳定",
+          "团队协作好",
+          "产品用户量大"
+        ],
+        "cons": [
+          "薪资竞争力一般",
+          "创新空间有限"
+        ],
+        "culture_keywords": [
+          "休闲娱乐",
+          "产品导向",
+          "稳定发展"
+        ]
+      },
+      "interview": {
+        "interview_difficulty": "中等",
+        "interview_rounds": "2-3轮",
+        "positive_rate": "60%",
+        "avg_interview_duration": "1-2周",
+        "common_questions": [
+          "游戏设计理念",
+          "技术方案",
+          "项目经验"
+        ],
+        "interview_tips": [
+          "了解公司产品",
+          "展示游戏开发经验"
+        ]
+      },
+      "labor_risk": {
+        "risk_level": "低",
+        "risk_analysis": "公司劳动合规情况良好",
+        "risk_items": []
+      },
+      "overall_score": 68
+    },
+    "鹰角": {
+      "name": "上海鹰角网络科技有限公司",
+      "english_name": "Hypergryph Network Technology Co., Ltd.",
+      "industry": "游戏",
+      "sub_industry": "二次元游戏",
+      "scale": "1000-5000人",
+      "established_year": "2017",
+      "registered_capital": "1000万元人民币",
+      "business_scope": "网络游戏开发、动漫设计、软件开发",
+      "headquarters": "上海市徐汇区",
+      "funding_status": "未上市",
+      "stock_code": "",
+      "website": "https://www.hypergryph.com",
+      "careers_url": "",
+      "key_products": [
+        "明日方舟",
+        "来自星尘"
+      ],
+      "competitors": [
+        "米哈游",
+        "腾讯"
+      ],
+      "market_position": "中国二次元游戏行业新锐企业",
+      "recent_news": "《明日方舟》持续运营，新作《来自星尘》已上线",
+      "salary": {
+        "avg_monthly": "20k-40k",
+        "salary_range": "15k-50k",
+        "year_end_bonus": "13-17薪",
+        "salary_adjustment": "每年1次调薪",
+        "benefits": [
+          "五险一金",
+          "补充医疗",
+          "免费晚餐",
+          "弹性工作"
+        ]
+      },
+      "reputation": {
+        "overall_rating": 4.2,
+        "recommendation_rate": "78%",
+        "ceo_approval_rate": "88%",
+        "pros": [
+          "产品口碑好",
+          "团队氛围好",
+          "发展潜力大"
+        ],
+        "cons": [
+          "加班较常见",
+          "核心产品单一"
+        ],
+        "culture_keywords": [
+          "二次元",
+          "独立精神",
+          "创意驱动"
+        ]
+      },
+      "interview": {
+        "interview_difficulty": "中等偏难",
+        "interview_rounds": "3-4轮",
+        "positive_rate": "68%",
+        "avg_interview_duration": "2-3周",
+        "common_questions": [
+          "技术方案设计",
+          "项目经验",
+          "游戏理解"
+        ],
+        "common_answers": [
+          "展示技术深度",
+          "体现对产品的理解"
+        ],
+        "interview_tips": [
+          "深入体验鹰角产品",
+          "准备技术方案设计案例"
+        ]
+      },
+      "labor_risk": {
+        "risk_level": "低",
+        "risk_analysis": "公司劳动合规情况良好",
+        "risk_items": []
+      },
+      "overall_score": 75
+    },
+    "米哈游": {
+      "name": "米哈游科技（上海）有限公司",
+      "english_name": "miHoYo Co., Ltd.",
+      "industry": "游戏",
+      "sub_industry": "二次元游戏",
+      "scale": "5000-10000人",
+      "established_year": "2013",
+      "registered_capital": "65000万元人民币",
+      "business_scope": "游戏开发、计算机软硬件技术开发",
+      "headquarters": "上海市徐汇区",
+      "funding_status": "未上市",
+      "stock_code": "",
+      "website": "https://www.mihoyo.com",
+      "careers_url": "https://www.mihoyo.com/careers",
+      "key_products": [
+        "原神",
+        "崩坏3",
+        "崩坏：星穹铁道",
+        "绝区零"
+      ],
+      "competitors": [
+        "腾讯",
+        "网易"
+      ],
+      "market_position": "中国二次元游戏头部企业，全球知名游戏公司",
+      "recent_news": "旗下《原神》持续全球运营，《崩坏：星穹铁道》表现优异",
+      "salary": {
+        "avg_monthly": "25k-45k",
+        "salary_range": "20k-60k",
+        "year_end_bonus": "12-18薪",
+        "salary_adjustment": "每年1-2次调薪",
+        "benefits": [
+          "五险一金",
+          "补充医疗",
+          "免费三餐",
+          "健身房",
+          "股票期权"
+        ]
+      },
+      "reputation": {
+        "overall_rating": 4.0,
+        "recommendation_rate": "72%",
+        "ceo_approval_rate": "85%",
+        "pros": [
+          "技术氛围好",
+          "项目影响力大",
+          "薪资竞争力强"
+        ],
+        "cons": [
+          "加班较多",
+          "项目管理有待提升"
+        ],
+        "culture_keywords": [
+          "技术驱动",
+          "二次元文化",
+          "年轻化"
+        ]
+      },
+      "interview": {
+        "interview_difficulty": "较难",
+        "interview_rounds": "3-5轮",
+        "positive_rate": "65%",
+        "avg_interview_duration": "2-4周",
+        "common_questions": [
+          "算法基础",
+          "项目经验",
+          "系统设计",
+          "技术深度"
+        ],
+        "common_answers": [
+          "建议准备扎实的技术基础",
+          "突出项目中的技术难点",
+          "展示学习能力和热情"
+        ],
+        "interview_tips": [
+          "深入了解游戏开发技术栈",
+          "准备作品集或技术博客",
+          "了解米哈游的产品和技术方向"
+        ]
+      },
+      "labor_risk": {
+        "risk_level": "低",
+        "risk_analysis": "公司劳动合规情况良好，无重大劳动纠纷记录",
+        "risk_items": []
+      },
+      "overall_score": 78
+    },
+    "小米": {
+      "name": "小米科技有限责任公司",
+      "english_name": "Xiaomi Corporation",
+      "industry": "消费电子",
+      "sub_industry": "智能手机/IoT",
+      "scale": "10000人以上",
+      "established_year": "2010",
+      "registered_capital": "103000万人民币",
+      "business_scope": "智能手机、IoT设备、互联网服务",
+      "headquarters": "北京市",
+      "funding_status": "上市",
+      "stock_code": "HKEX:1810",
+      "website": "https://www.mi.com",
+      "careers_url": "https://hr.xiaomi.com",
+      "key_products": [
+        "小米手机",
+        "米家IoT产品"
+      ],
+      "competitors": [
+        "苹果",
+        "华为",
+        "OPPO"
+      ],
+      "market_position": "全球领先的消费电子品牌",
+      "recent_news": "进军汽车行业",
+      "salary": {
+        "avg_monthly": "22000元",
+        "salary_range": "10000-35000元",
+        "year_end_bonus": "1-3个月",
+        "salary_adjustment": "一年一次",
+        "benefits": [
+          "五险一金",
+          "餐补",
+          "年度体检",
+          "产品内购"
+        ]
+      },
+      "reputation": {
+        "overall_rating": "3.9/5",
+        "recommendation_rate": "68%",
+        "ceo_approval_rate": "82%",
+        "pros": [
+          "产品理念好",
+          "团队年轻",
+          "成长空间大",
+          "扁平化管理"
+        ],
+        "cons": [
+          "薪资竞争力一般",
+          "部分业务波动大",
+          "流程不够完善"
+        ],
+        "culture_keywords": [
+          "和用户做朋友",
+          "感动人心",
+          "厚道价格",
+          "效率优先"
+        ]
+      },
+      "interview": {
+        "interview_difficulty": "中等",
+        "interview_rounds": "2-3轮",
+        "positive_rate": "35%",
+        "avg_interview_duration": "1小时",
+        "common_questions": [
+          "为什么选择小米？",
+          "介绍一个产品相关的项目经验",
+          "你对IoT的理解？",
+          "如何看待性价比？",
+          "你使用过哪些小米产品？"
+        ],
+        "common_answers": {
+          "为什么选择小米？": "小米的产品理念和商业模式很吸引我，用科技改善生活的愿景让我很认同。",
+          "介绍一个产品相关的项目经验": "我参与过一款IoT设备的开发，从用户需求出发，优化了产品的用户体验和性能。",
+          "你对IoT的理解？": "IoT正在连接万物，打造智能生活场景，数据和AI是IoT的核心驱动力。",
+          "如何看待性价比？": "性价比不是低价，而是用合理的价格提供超出预期的产品体验和品质。",
+          "你使用过哪些小米产品？": "我使用过小米手机、智能音箱和智能家居设备，对MIUI系统和米家生态很熟悉。"
+        },
+        "interview_tips": [
+          "了解小米产品",
+          "准备产品思维",
+          "展示学习能力",
+          "关注IoT"
+        ]
+      },
+      "labor_risk": {
+        "risk_level": "低",
+        "risk_analysis": "公司劳动合规情况良好，注重员工培养。",
+        "risk_items": []
+      }
+    },
+    "京东": {
+      "name": "北京京东世纪贸易有限公司",
+      "english_name": "JD.com",
+      "industry": "互联网",
+      "sub_industry": "电商/物流",
+      "scale": "10000人以上",
+      "established_year": "2004",
+      "registered_capital": "139798万人民币",
+      "business_scope": "电子商务、物流配送、数字科技",
+      "headquarters": "北京市",
+      "funding_status": "上市",
+      "stock_code": "NASDAQ:JD",
+      "website": "https://www.jd.com",
+      "careers_url": "https://campus.jd.com",
+      "key_products": [
+        "京东商城",
+        "京东物流",
+        "京东健康"
+      ],
+      "competitors": [
+        "阿里巴巴",
+        "拼多多"
+      ],
+      "market_position": "中国电商行业第二",
+      "recent_news": "京东物流上市",
+      "salary": {
+        "avg_monthly": "24000元",
+        "salary_range": "12000-40000元",
+        "year_end_bonus": "2-4个月",
+        "salary_adjustment": "一年一次",
+        "benefits": [
+          "五险一金",
+          "房补",
+          "餐补",
+          "员工购",
+          "物流补贴"
+        ]
+      },
+      "reputation": {
+        "overall_rating": "4.0/5",
+        "recommendation_rate": "73%",
+        "ceo_approval_rate": "85%",
+        "pros": [
+          "物流体系强",
+          "福利待遇好",
+          "技术栈完善",
+          "晋升机会多"
+        ],
+        "cons": [
+          "部分岗位加班多",
+          "物流一线辛苦",
+          "组织变革频繁"
+        ],
+        "culture_keywords": [
+          "客户为先",
+          "诚信",
+          "协作",
+          "拼搏"
+        ]
+      },
+      "interview": {
+        "interview_difficulty": "中等",
+        "interview_rounds": "2-4轮",
+        "positive_rate": "30%",
+        "avg_interview_duration": "1.5小时",
+        "common_questions": [
+          "为什么选择京东？",
+          "介绍一个高可用系统的设计经验",
+          "如何处理大数据场景？",
+          "你对电商物流的理解？",
+          "如何应对促销大促？"
+        ],
+        "common_answers": {
+          "为什么选择京东？": "京东在电商和物流领域有独特优势，技术体系完善，能够提供丰富的技术实践机会。",
+          "介绍一个高可用系统的设计经验": "我参与过订单系统的高可用改造，通过多活部署和熔断机制提升了系统稳定性。",
+          "如何处理大数据场景？": "采用Hadoop/Spark等大数据技术栈，结合数据仓库和实时计算来处理海量数据。",
+          "你对电商物流的理解？": "物流是电商的核心竞争力之一，智能化和自动化是物流发展的重要方向。",
+          "如何应对促销大促？": "通过容量规划、弹性伸缩、流量控制等方式来保障系统在大促期间的稳定性。"
+        },
+        "interview_tips": [
+          "了解电商业务",
+          "准备系统设计",
+          "关注高可用",
+          "了解物流"
+        ]
+      },
+      "labor_risk": {
+        "risk_level": "低",
+        "risk_analysis": "公司劳动合规情况良好，注重物流员工权益保障。",
+        "risk_items": []
+      }
+    },
+    "美团": {
+      "name": "北京三快在线科技有限公司",
+      "english_name": "Meituan",
+      "industry": "互联网",
+      "sub_industry": "本地生活服务",
+      "scale": "10000人以上",
+      "established_year": "2010",
+      "registered_capital": "50000万人民币",
+      "business_scope": "外卖、到店餐饮、旅游",
+      "headquarters": "北京市",
+      "funding_status": "上市",
+      "stock_code": "HKEX:3690",
+      "website": "https://www.meituan.com",
+      "careers_url": "https://zhaopin.meituan.com",
+      "key_products": [
+        "美团外卖",
+        "美团点评",
+        "美团优选"
+      ],
+      "competitors": [
+        "饿了么",
+        "抖音本地生活"
+      ],
+      "market_position": "本地生活服务龙头",
+      "recent_news": "布局社区团购",
+      "salary": {
+        "avg_monthly": "25000元",
+        "salary_range": "13000-42000元",
+        "year_end_bonus": "2-5个月",
+        "salary_adjustment": "一年一次",
+        "benefits": [
+          "五险一金",
+          "餐补",
+          "打车补贴",
+          "年度体检"
+        ]
+      },
+      "reputation": {
+        "overall_rating": "3.8/5",
+        "recommendation_rate": "70%",
+        "ceo_approval_rate": "80%",
+        "pros": [
+          "业务场景丰富",
+          "技术挑战大",
+          "成长速度快",
+          "团队氛围好"
+        ],
+        "cons": [
+          "外卖业务压力大",
+          "部分岗位加班多",
+          "竞争激烈"
+        ],
+        "culture_keywords": [
+          "以客户为中心",
+          "长期主义",
+          "坦诚沟通",
+          "追求卓越"
+        ]
+      },
+      "interview": {
+        "interview_difficulty": "中等偏上",
+        "interview_rounds": "3-4轮",
+        "positive_rate": "26%",
+        "avg_interview_duration": "1.5小时",
+        "common_questions": [
+          "为什么选择美团？",
+          "介绍一个地理相关的项目经验",
+          "如何处理实时数据？",
+          "你对本地生活的理解？",
+          "如何优化配送效率？"
+        ],
+        "common_answers": {
+          "为什么选择美团？": "美团在本地生活服务领域处于领先地位，业务场景贴近用户，技术挑战丰富。",
+          "介绍一个地理相关的项目经验": "我参与过配送路径优化系统的开发，通过图算法优化配送路线，提升了配送效率。",
+          "如何处理实时数据？": "使用Kafka/Flink等实时流处理技术，结合Redis缓存来处理实时数据。",
+          "你对本地生活的理解？": "本地生活正在从线上线下融合向即时零售演进，即时配送是核心基础设施。",
+          "如何优化配送效率？": "通过算法优化路径规划、动态调度骑手、预测订单需求等方式来提升配送效率。"
+        },
+        "interview_tips": [
+          "了解LBS技术",
+          "准备算法知识",
+          "关注实时数据",
+          "了解外卖业务"
+        ]
+      },
+      "labor_risk": {
+        "risk_level": "低",
+        "risk_analysis": "公司劳动合规情况良好，注重骑手权益保障。",
+        "risk_items": []
+      }
+    },
+    "网易": {
+      "name": "网易(杭州)网络有限公司",
+      "english_name": "NetEase",
+      "industry": "互联网",
+      "sub_industry": "游戏/音乐/教育",
+      "scale": "10000人以上",
+      "established_year": "1997",
+      "registered_capital": "70000万人民币",
+      "business_scope": "游戏、音乐、教育、电商",
+      "headquarters": "浙江省杭州市",
+      "funding_status": "上市",
+      "stock_code": "NASDAQ:NTES",
+      "website": "https://www.163.com",
+      "careers_url": "https://hr.163.com",
+      "key_products": [
+        "网易云音乐",
+        "梦幻西游",
+        "网易严选"
+      ],
+      "competitors": [
+        "腾讯",
+        "字节跳动"
+      ],
+      "market_position": "中国领先的互联网公司",
+      "recent_news": "网易云音乐上市",
+      "salary": {
+        "avg_monthly": "27000元",
+        "salary_range": "14000-48000元",
+        "year_end_bonus": "3-6个月",
+        "salary_adjustment": "一年两次",
+        "benefits": [
+          "五险一金",
+          "房补",
+          "餐补",
+          "免费班车",
+          "健身房"
+        ]
+      },
+      "reputation": {
+        "overall_rating": "4.1/5",
+        "recommendation_rate": "76%",
+        "ceo_approval_rate": "87%",
+        "pros": [
+          "企业文化好",
+          "福利完善",
+          "工作生活平衡",
+          "技术氛围浓厚"
+        ],
+        "cons": [
+          "晋升较慢",
+          "部分游戏项目压力大",
+          "业务分散"
+        ],
+        "culture_keywords": [
+          "匠心",
+          "创新",
+          "务实",
+          "分享"
+        ]
+      },
+      "interview": {
+        "interview_difficulty": "中等",
+        "interview_rounds": "2-3轮",
+        "positive_rate": "32%",
+        "avg_interview_duration": "1.5小时",
+        "common_questions": [
+          "为什么选择网易？",
+          "介绍一个娱乐相关的项目经验",
+          "如何处理音频/视频数据？",
+          "你对游戏行业的看法？",
+          "如何保证项目进度？"
+        ],
+        "common_answers": {
+          "为什么选择网易？": "网易注重产品品质和用户体验，在游戏和音乐领域有深厚积累，工作氛围也很吸引人。",
+          "介绍一个娱乐相关的项目经验": "我参与过音乐推荐系统的开发，通过深度学习模型提升了推荐准确率。",
+          "如何处理音频/视频数据？": "使用FFmpeg等工具进行音视频处理，结合CDN分发来保障内容传输。",
+          "你对游戏行业的看法？": "游戏正在从娱乐向多元化发展，电竞、云游戏、元宇宙是重要方向。",
+          "如何保证项目进度？": "通过敏捷开发、定期同步、风险预判等方式来保证项目按时交付。"
+        },
+        "interview_tips": [
+          "了解网易产品",
+          "准备项目案例",
+          "展示技术深度",
+          "关注游戏"
+        ]
+      },
+      "labor_risk": {
+        "risk_level": "低",
+        "risk_analysis": "公司劳动合规情况良好，注重员工福利。",
+        "risk_items": []
+      }
+    }
+  },
+  "_note": "Mock company data extracted from ai_analyzer.py. Used by generate_mock_company_data()."
+}

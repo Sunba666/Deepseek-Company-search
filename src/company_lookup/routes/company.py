@@ -578,25 +578,102 @@ def dashboard_search():
     if not query:
         return error_alert("搜公司要先输入名字哦")
 
-    # Dashboard uses generate_mock_company_data format
+    # ── 1. 实体解析：将简称/别名解析为标准名称（与首页搜索一致）──
+    from ..services.entity_resolver import entity_resolver
+    resolved = entity_resolver.resolve(query)
+    canonical = resolved.get("matched_name", query) if resolved.get("status") == "matched" else query
+
+    # ── 2. 尝试从知识库/缓存读取数据 ──
+    from ..services.unified_data_service import UnifiedDataService
+    uds = UnifiedDataService()
+    cached = uds.get_company_data_cached_only(canonical)
+    if cached and cached.get("raw_data"):
+        # 将 unified 数据格式转换为仪表盘模板需要的格式
+        raw = cached["raw_data"]
+        data = _build_dashboard_data(query, canonical, raw)
+        if data:
+            return render_template("partials/dashboard_result.html",
+                                   company=query, data=data, error=None)
+
+    # ── 3. 回退到 mock 数据 ──
     from ..services.company_service import query_company_info
-    data = query_company_info(query)
+    data = query_company_info(canonical)
     blocked = _company_lookup_error_response(
-        query,
-        data,
+        query, data,
         result_template="partials/dashboard_result.html",
-        company=query,
-        data={},
+        company=query, data={},
     )
     if blocked:
         return blocked
 
-    return render_template(
-        "partials/dashboard_result.html",
-        company=query,
-        data=data,
-        error=None,
-    )
+    return render_template("partials/dashboard_result.html",
+                           company=query, data=data, error=None)
+
+
+def _build_dashboard_data(query: str, canonical: str, raw: dict) -> dict:
+    """将 unified_data_service 的 raw_data 转换为仪表盘模板期望的格式。"""
+    entity = raw.get("tianyacha", {}) or raw.get("basic", {})
+    salary = raw.get("salary", {})
+    reputation = raw.get("reputation", {}) or raw.get("culture", {})
+    risk = raw.get("wenshu", {}) or raw.get("risk", {})
+    interview = raw.get("interview", {})
+
+    def _val(v, default=""):
+        return v if v and str(v).strip() else default
+
+    data = {
+        "name": _val(entity.get("company_name", "") or canonical),
+        "english_name": _val(entity.get("english_name", "")),
+        "industry": _val(entity.get("company_type", "")),
+        "sub_industry": _val(entity.get("sub_industry", "")),
+        "scale": _val(entity.get("company_status", "")),
+        "established_year": _val(entity.get("establishment_date", ""))[:4],
+        "registered_capital": _val(entity.get("registered_capital", "")),
+        "business_scope": _val(entity.get("business_scope", "")),
+        "headquarters": _val(entity.get("registered_address", "")),
+        "funding_status": _val(entity.get("funding_status", "")),
+        "stock_code": _val(entity.get("stock_code", "")),
+        "website": _val(entity.get("website", "")),
+        "careers_url": _val(entity.get("careers_url", "")),
+        "key_products": entity.get("key_products", []) if isinstance(entity.get("key_products"), list) else [],
+        "competitors": entity.get("competitors", []) if isinstance(entity.get("competitors"), list) else [],
+        "market_position": _val(entity.get("market_position", "")),
+        "recent_news": _val(entity.get("recent_news", "")),
+        "salary": salary if isinstance(salary, dict) else {},
+        "reputation": reputation if isinstance(reputation, dict) else {},
+        "interview": interview if isinstance(interview, dict) else {},
+        "labor_risk": risk if isinstance(risk, dict) else {"risk_level": "低", "risk_analysis": "", "risk_items": []},
+        "overall_score": _calculate_overall_from_dimensions(entity, salary, reputation, risk),
+        "data_source": "知识库",
+    }
+    # 确保至少有一些内容而不是全空
+    if not any(v for k, v in data.items() if k not in ("salary", "reputation", "interview", "labor_risk", "key_products", "competitors")):
+        return None
+    from ..ai_analyzer import _calculate_overall_score as fallback_score
+    if not data["overall_score"]:
+        data["overall_score"] = fallback_score(data)
+    return data
+
+
+def _calculate_overall_from_dimensions(entity: dict, salary: dict, reputation: dict, risk: dict) -> int:
+    """从各维度数据估算综合评分。"""
+    score = 50
+    if isinstance(reputation, dict):
+        try:
+            r = reputation.get("overall_rating", "")
+            if r and "/" in str(r):
+                score += float(str(r).split("/")[0]) * 10
+            elif r:
+                score += float(r) * 10
+        except (ValueError, TypeError):
+            pass
+    funding = entity.get("funding_status", "")
+    if "上市" in str(funding):
+        score += 15
+    scale = entity.get("company_status", "")
+    if "存续" in str(scale) or "开业" in str(scale):
+        score += 10
+    return max(0, min(100, int(score)))
 
 
 @bp.route("/analyze", methods=["POST"])

@@ -31,6 +31,24 @@ htmlcov/
 
 # Logs
 *.log
+flask_server.log
+
+# Databases (generated at runtime)
+*.db
+**/data/*.db
+
+# Oversized auto-generated files
+src/docs/optimization_log.md
+
+# Backup files
+*.bak
+
+# Databases (generated at runtime)
+*.db
+
+# Generated data
+src/docs/
+*.bak
 
 # OS
 .DS_Store
