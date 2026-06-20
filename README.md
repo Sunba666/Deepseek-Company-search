@@ -326,6 +326,16 @@ pytest tests/test_search.py::TestHomepageSearch -v
 
 ---
 
+## 💰 赞助支持
+
+如果你觉得这个项目对你有帮助，欢迎请作者喝杯咖啡 ☕️
+
+| 微信支付 | 支付宝 |
+|:---:|:---:|
+| <img src="static/images/wechat_pay.jpg" width="200"/> | <img src="static/images/alipay.jpg" width="200"/> |
+
+---
+
 ## License
 
 MIT © Company Lookup Team
