@@ -332,7 +332,7 @@ pytest tests/test_search.py::TestHomepageSearch -v
 
 | 微信支付 | 支付宝 |
 |:---:|:---:|
-| <img src="static/images/wechat_pay.jpg" width="200"/> | <img src="static/images/alipay.jpg" width="200"/> |
+| <img src="static/images/wechat_pay.png" width="200"/> | <img src="static/images/alipay.jpg" width="200"/> |
 
 ---
 
