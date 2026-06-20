@@ -6,12 +6,39 @@
 
 import asyncio
 import logging
+import threading
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+# ── Mock 降级统计（全局计数器，线程安全） ──────────
+_mock_fallback_lock = threading.Lock()
+_mock_fallback_stats = {
+    "entity": 0,    # 工商信息降级
+    "sentiment": 0, # 舆情降级
+    "risk": 0,      # 司法风险降级
+    "salary": 0,    # 薪资降级
+    "reputation": 0, # 口碑降级
+    "interview": 0,  # 面试降级
+}
+
+
+def get_mock_fallback_stats() -> dict:
+    """获取 Mock 降级统计（线程安全）。"""
+    with _mock_fallback_lock:
+        return dict(_mock_fallback_stats)
+
+
+def _increment_mock_fallback(source: str):
+    """递增 Mock 降级计数（线程安全）。"""
+    with _mock_fallback_lock:
+        if source in _mock_fallback_stats:
+            _mock_fallback_stats[source] += 1
+        else:
+            _mock_fallback_stats[source] = 1
 
 
 @dataclass
@@ -266,7 +293,8 @@ class MockDataAggregator(DataAggregator):
                 from .mock_data import MockDataProvider
                 mock_entity = MockDataProvider.get_entity(company_name)
                 if mock_entity and mock_entity.is_valid:
-                    logger.info(f"✅ 工商信息 Mock 降级成功: {company_name}")
+                    logger.warning(f"⚠️ 工商信息降级到 Mock 数据: {company_name}")
+                    _increment_mock_fallback("entity")
                     return DataSourceStatus(
                         id="tianyacha", name="工商信息",
                         available=True, data=mock_entity, is_mock=True,
@@ -311,15 +339,16 @@ class MockDataAggregator(DataAggregator):
                     source_url="https://app.tavily.com/" if not is_mock else "",
                 )
             else:
-                logger.info(f"舆情API未返回数据，使用Mock降级: {company_name}")
+                logger.warning(f"⚠️ 舆情API无返回，降级到 Mock: {company_name}")
                 return await self._fetch_sentiment_mock(company_name)
         except Exception as e:
-            logger.error(f"_fetch_sentiment failed: {e}")
+            logger.warning(f"⚠️ 舆情API异常 ({e})，降级到 Mock: {company_name}")
             return await self._fetch_sentiment_mock(company_name)
 
     async def _fetch_sentiment_mock(self, company_name: str) -> DataSourceStatus:
         """舆情数据Mock降级 - 返回中文"暂无公开数据"提示"""
         try:
+            _increment_mock_fallback("sentiment")
             from .mock_data import MockDataProvider
             mock_sentiments = MockDataProvider.get_sentiments(company_name)
             return DataSourceStatus(
@@ -360,15 +389,16 @@ class MockDataAggregator(DataAggregator):
                     source_url="https://wenshu.court.gov.cn/" if not is_mock else "",
                 )
             else:
-                logger.info(f"风险API未返回数据，使用Mock降级: {company_name}")
+                logger.warning(f"⚠️ 风险API无返回，降级到 Mock: {company_name}")
                 return await self._fetch_risk_mock(company_name)
         except Exception as e:
-            logger.error(f"_fetch_risk failed: {e}")
+            logger.warning(f"⚠️ 风险API异常 ({e})，降级到 Mock: {company_name}")
             return await self._fetch_risk_mock(company_name)
 
     async def _fetch_risk_mock(self, company_name: str) -> DataSourceStatus:
         """司法风险Mock降级 - 返回中文"暂无公开数据"提示"""
         try:
+            _increment_mock_fallback("risk")
             from .mock_data import MockDataProvider
             mock_risks = MockDataProvider.get_risks(company_name)
             return DataSourceStatus(

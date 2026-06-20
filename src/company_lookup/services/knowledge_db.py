@@ -20,6 +20,7 @@ _PROJECT_ROOT = os.path.dirname(  # services/ → src/ → 项目根
 )
 DB_PATH = os.path.join(_PROJECT_ROOT, "company_knowledge.db")
 
+_tables_initialized = False
 _write_lock = threading.Lock()
 
 
@@ -34,6 +35,9 @@ def _get_conn() -> sqlite3.Connection:
 
 
 def _ensure_tables(conn: sqlite3.Connection):
+    global _tables_initialized
+    if _tables_initialized:
+        return
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS companies (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -107,6 +111,7 @@ def _ensure_tables(conn: sqlite3.Connection):
         pass
     # 自动补全 province 字段（基于 city → province 映射）
     _auto_fill_province(conn)
+    _tables_initialized = True
 
 
 # 城市 → 省份映射表

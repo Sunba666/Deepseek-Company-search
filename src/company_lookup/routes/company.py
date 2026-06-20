@@ -1320,10 +1320,16 @@ def admin_system_health():
         },
     ]
 
+    # Mock 降级统计
+    from ..services.aggregator import get_mock_fallback_stats
+    mock_stats = get_mock_fallback_stats()
+    total_mock = sum(mock_stats.values())
+
     return render_template("system_health.html",
                            engines=engines, kb=kb_stats,
                            report=report, now=datetime.now().isoformat(),
-                           title="系统运行状态")
+                           title="系统运行状态",
+                           mock_stats=mock_stats, total_mock=total_mock)
 
 
 # ========== 求职匹配 API ==========
