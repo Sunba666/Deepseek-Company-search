@@ -2,11 +2,23 @@
 {% block content %}
 <div class="container-fluid py-4" style="max-width:1100px;">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4><i class="bi bi-heart-pulse me-2"></i>系统运行状态</h4>
+    <!-- 整体状态大横幅 -->
+    <div class="alert {% if overall == 'healthy' %}alert-success{% elif overall == 'down' %}alert-danger{% else %}alert-warning{% endif %} d-flex align-items-center justify-content-between mb-4 py-3">
         <div>
-            <small class="text-muted me-2">更新于 {{ now[:19] }}</small>
-            <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
+            <strong style="font-size:1.2rem;">
+                {% if overall == 'healthy' %}
+                <i class="bi bi-check-circle-fill"></i> 所有系统运行正常
+                {% elif overall == 'down' %}
+                <i class="bi bi-x-circle-fill"></i> 系统已停止
+                {% else %}
+                <i class="bi bi-exclamation-triangle-fill"></i> 系统部分异常
+                {% endif %}
+            </strong>
+            <span class="ms-2 small">{{ running_count }}/{{ total_count }} 引擎运行中</span>
+        </div>
+        <div>
+            <small class="me-2 text-muted">更新于 <span id="update-time">{{ now[:19] }}</span></small>
+            <button class="btn btn-sm {% if overall == 'healthy' %}btn-outline-success{% elif overall == 'down' %}btn-outline-danger{% else %}btn-outline-warning{% endif %}" onclick="location.reload()">
                 <i class="bi bi-arrow-clockwise"></i> 刷新
             </button>
         </div>
@@ -41,9 +53,18 @@
                             <small>{{ eng.detail }}</small>
                         </div>
                         {% endif %}
+                        <div class="d-flex justify-content-between mt-1">
+                            <span><i class="bi bi-heart"></i> 心跳</span>
+                            <span>{{ eng.last_heartbeat or '—' }}</span>
+                        </div>
+                        {% if eng.crash_count > 0 %}
+                        <div class="mt-1">
+                            <small class="text-warning"><i class="bi bi-exclamation-triangle"></i> 已崩溃 {{ eng.crash_count }} 次</small>
+                        </div>
+                        {% endif %}
                         {% if eng.last_error %}
-                        <div class="mt-2 pt-2 border-top border-light">
-                            <small class="text-danger"><i class="bi bi-exclamation-triangle"></i> 上次异常: {{ eng.last_error }}</small>
+                        <div class="mt-1">
+                            <small class="text-danger"><i class="bi bi-bug"></i> {{ eng.last_error[:80] }}</small>
                         </div>
                         {% endif %}
                     </div>
@@ -200,4 +221,11 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+// 页面每 30 秒自动刷新
+setTimeout(function() {
+    location.reload();
+}, 30000);
+</script>
 {% endblock %}

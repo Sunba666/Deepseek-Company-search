@@ -1300,6 +1300,7 @@ def admin_system_health():
             "detail": f"队列 {ms.get('queue_size',0)} 个待验证 · 完整性修复 {ms.get('completeness_fixed',0)} 次",
             "crash_count": ms.get("crash_count", 0),
             "last_error": ms.get("last_error", None),
+            "last_heartbeat": _safe(ms.get("last_heartbeat")),
         },
         {
             "name": "永续优化引擎",
@@ -1311,6 +1312,7 @@ def admin_system_health():
             "detail": f"当前阶段: {os_.get('current_phase','idle')} · 上次扫描: {_safe(os_.get('last_scan_time'))}",
             "crash_count": os_.get("crash_count", 0),
             "last_error": os_.get("last_error", None),
+            "last_heartbeat": _safe(os_.get("last_heartbeat")),
         },
         {
             "name": "持续发现引擎",
@@ -1320,6 +1322,9 @@ def admin_system_health():
             "started_at": _safe(ds.get("started_at")),
             "ops": f"已进行 {ds.get('total_rounds',0)} 轮发现，收录 {ds.get('total_added',0)} 家",
             "detail": f"当前策略: {ds.get('next_strategy', '—')}",
+            "crash_count": ds.get("crash_count", 0),
+            "last_error": ds.get("last_error", None),
+            "last_heartbeat": _safe(ds.get("last_heartbeat")),
         },
         {
             "name": "内推码采集引擎",
@@ -1331,6 +1336,7 @@ def admin_system_health():
             "detail": f"适配器 {rs.get('scraper_count',0)} 个 · 上次采集: {_safe(rs.get('last_collect_time'))}",
             "crash_count": rs.get("crash_count", 0),
             "last_error": rs.get("last_error", None),
+            "last_heartbeat": _safe(rs.get("last_heartbeat")),
         },
     ]
 
@@ -1339,10 +1345,24 @@ def admin_system_health():
     mock_stats = get_mock_fallback_stats()
     total_mock = sum(mock_stats.values())
 
+    running_count = sum(1 for e in engines if e["is_running"])
+    total_count = len(engines)
+    error_count = sum(1 for e in engines if e["last_error"])
+
+    if running_count == total_count and error_count == 0:
+        overall = "healthy"
+    elif running_count == 0:
+        overall = "down"
+    else:
+        overall = "degraded"
+
     return render_template("system_health.html",
                            engines=engines, kb=kb_stats,
                            report=report, now=datetime.now().isoformat(),
                            title="系统运行状态",
+                           overall=overall,
+                           running_count=running_count,
+                           total_count=total_count,
                            mock_stats=mock_stats, total_mock=total_mock)
 
 
@@ -1604,6 +1624,49 @@ def api_referral_collector_status():
     """查看内推码采集引擎状态。"""
     from ..services.referral_collector import collector
     return jsonify({"code": 0, "data": collector.status()})
+
+
+@bp.route("/api/health", methods=["GET"])
+def api_health():
+    """统一引擎健康检查端点。"""
+    from ..services.knowledge_maintainer import maintainer
+    from ..services.optimization_engine import optimizer
+    from ..services.discovery_engine import discovery_engine
+    from ..services.referral_collector import collector
+
+    engines_data = [
+        {"name": "知识库维护引擎", "key": "maintainer", "status": maintainer.status()},
+        {"name": "永续优化引擎", "key": "optimizer", "status": optimizer.status()},
+        {"name": "持续发现引擎", "key": "discovery", "status": discovery_engine.status()},
+        {"name": "内推码采集引擎", "key": "collector", "status": collector.status()},
+    ]
+
+    running = sum(1 for e in engines_data if e["status"].get("is_running", False))
+    total = len(engines_data)
+    has_error = any(e["status"].get("last_error") for e in engines_data)
+
+    if running == total and not has_error:
+        overall = "healthy"
+    elif running == 0:
+        overall = "down"
+    else:
+        overall = "degraded" if has_error or running < total else "healthy"
+
+    return jsonify({
+        "overall": overall,
+        "engines": [
+            {
+                "name": e["name"],
+                "is_running": e["status"].get("is_running", False),
+                "started_at": e["status"].get("started_at"),
+                "last_heartbeat": e["status"].get("last_heartbeat"),
+                "crash_count": e["status"].get("crash_count", 0),
+                "last_error": e["status"].get("last_error"),
+            }
+            for e in engines_data
+        ],
+        "summary": f"{running}/{total} 引擎运行中",
+    })
 
 
 @bp.route("/api/optimizer/scan-now", methods=["POST"])

@@ -112,6 +112,9 @@ class ReferralCollector:
                 continue
 
             self._stop_event.wait(60)  # 每分钟唤醒一次
+            # 心跳标记
+            self._stats["last_heartbeat"] = datetime.now().isoformat()
+            logger.debug("[ReferralCollector] [HEARTBEAT] alive")
 
     def _collect_round(self):
         """执行一轮采集。"""

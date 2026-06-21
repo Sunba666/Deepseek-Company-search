@@ -83,6 +83,7 @@ class DiscoveryEngine:
             "is_running": False,
             "crash_count": 0,
             "last_error": None,
+            "last_heartbeat": None,
         }
 
     # ═══════════════════════════════════════════════
@@ -178,6 +179,10 @@ class DiscoveryEngine:
                 interval = random.randint(MIN_INTERVAL, MAX_INTERVAL)
                 logger.info(f"[Discovery] 下一轮等待 {interval//60} 分钟...")
                 self._stop_event.wait(interval)
+
+                # 心跳标记
+                self._stats["last_heartbeat"] = datetime.now().isoformat()
+                logger.debug("[Discovery] [HEARTBEAT] alive")
 
             except Exception as e:
                 logger.exception(f"[Discovery] 主循环全局异常: {e}")

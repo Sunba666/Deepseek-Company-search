@@ -57,6 +57,7 @@ class OptimizationEngine:
             "is_running": False,
             "started_at": None,
             "current_phase": "idle",
+            "last_heartbeat": None,
         }
         self._issues_log: List[Dict] = []
         self._fixes_log: List[Dict] = []
@@ -126,6 +127,9 @@ class OptimizationEngine:
                 continue
 
             self._stop_event.wait(QUICK_CHECK_INTERVAL)
+            # 心跳标记
+            self._stats["last_heartbeat"] = datetime.now().isoformat()
+            logger.debug("[Optimizer] [HEARTBEAT] alive")
 
     def _quick_check(self):
         """快速预检：只检查最关键的几个指标。"""

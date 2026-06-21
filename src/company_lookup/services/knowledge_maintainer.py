@@ -48,6 +48,7 @@ class KnowledgeMaintainer:
             "last_health_report": None,
             "is_running": False,
             "started_at": None,
+            "last_heartbeat": None,
         }
         # 待验证队列（公司名 → 时间戳）
         self._verify_queue: Dict[str, float] = {}
@@ -141,6 +142,9 @@ class KnowledgeMaintainer:
                 continue
 
             self._stop_event.wait(60)  # 每分钟唤醒一次
+            # 心跳标记
+            self._stats["last_heartbeat"] = datetime.now().isoformat()
+            logger.debug("[Maintainer] [HEARTBEAT] alive")
 
     # ═══════════════════════════════════════════════
     #  1. 后台验证（关键字段变化检测）
