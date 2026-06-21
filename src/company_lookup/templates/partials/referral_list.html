@@ -53,9 +53,7 @@
 <div class="text-center py-5 text-muted">
     <i class="bi bi-inbox" style="font-size: 3rem;"></i>
     <p class="mt-2">暂无内推码数据</p>
-    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#submitModal">
-        <i class="bi bi-plus-lg"></i> 提交内推码
-    </button>
+    <p class="mt-1">AI 采集引擎正在运行中，内推码将通过自动采集+AI验证后展示。</p>
 </div>
 {% endif %}
 
@@ -68,7 +66,6 @@ function reportExpired(codeId) {
             if (data.success) {
                 const card = document.getElementById('code-' + codeId);
                 if (card) card.style.opacity = '0.5';
-                // 更新反馈计数
                 const cnt = document.getElementById('total-report-count');
                 if (cnt) cnt.textContent = parseInt(cnt.textContent || '0') + 1;
             }

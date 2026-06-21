@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 # 采集周期（秒）
 COLLECT_INTERVAL = 3600  # 每 1 小时采集一轮
+AI_VALIDATE_INTERVAL = 1800  # 每 30 分钟 AI 验证一轮
 # 热度阈值：只采集热度高于此值的公司
 HOTNESS_THRESHOLD = 30
 # 每轮最多采集的公司数
@@ -36,7 +37,9 @@ class ReferralCollector:
             "is_running": False,
             "started_at": None,
             "last_collect_time": None,
+            "last_ai_validate_time": None,
             "total_collected": 0,
+            "total_ai_validated": 0,
             "total_errors": 0,
             "last_error": None,
             "crash_count": 0,
@@ -82,10 +85,22 @@ class ReferralCollector:
     # ═══════════════════════════════════════════════
 
     def _run_loop(self):
+        last_ai_validate = 0
+
         while not self._stop_event.is_set():
+            now = time.time()
             try:
-                self._collect_round()
-                self._stats["last_collect_time"] = datetime.now().isoformat()
+                # 1. 采集（每 1 小时）
+                if self._stats.get("last_collect_time") is None or now - self._parse_time(self._stats["last_collect_time"]) > COLLECT_INTERVAL:
+                    self._collect_round()
+                    self._stats["last_collect_time"] = datetime.now().isoformat()
+
+                # 2. AI 验证（每 30 分钟）
+                if now - last_ai_validate > AI_VALIDATE_INTERVAL:
+                    self._run_ai_validation()
+                    last_ai_validate = now
+                    self._stats["last_ai_validate_time"] = datetime.now().isoformat()
+
             except Exception as e:
                 logger.exception(f"[ReferralCollector] 主循环异常: {e}")
                 self._stats["last_error"] = f"{type(e).__name__}: {e}"
@@ -96,7 +111,7 @@ class ReferralCollector:
                 self._stop_event.wait(backoff)
                 continue
 
-            self._stop_event.wait(COLLECT_INTERVAL)
+            self._stop_event.wait(60)  # 每分钟唤醒一次
 
     def _collect_round(self):
         """执行一轮采集。"""
@@ -201,8 +216,9 @@ class ReferralCollector:
                     "recruiter_title": item.get("recruiter_title", ""),
                     "description": item.get("description", ""),
                     "positions": item.get("positions", "[]"),
+                    "raw_content": item.get("raw_content", ""),
                     "posted_at": item.get("posted_at", ""),
-                    "status": "有效",
+                    "status": "待验证",
                     "source_type": "采集",
                 }
                 db.insert_referral(conn, data)
@@ -210,6 +226,56 @@ class ReferralCollector:
         finally:
             conn.close()
         return new_count
+
+    @staticmethod
+    def _parse_time(iso_str: str) -> float:
+        """解析 ISO 时间戳为时间戳秒数。"""
+        try:
+            return datetime.fromisoformat(iso_str).timestamp()
+        except (ValueError, TypeError):
+            return 0
+
+    def _run_ai_validation(self):
+        """AI 批量验证待处理的内推码。"""
+        conn = db.get_db()
+        try:
+            pending = db.get_pending_validation(conn, limit=30)
+        finally:
+            conn.close()
+
+        if not pending:
+            logger.info("[ReferralCollector] 无待验证内推码")
+            return
+
+        logger.info(f"[ReferralCollector] AI 验证 {len(pending)} 条待处理内推码")
+        try:
+            from .referral_ai_validator import validate_batch
+            judgments = validate_batch(pending)
+        except Exception as e:
+            logger.error(f"[ReferralCollector] AI 验证失败: {e}")
+            return
+
+        if not judgments:
+            logger.warning("[ReferralCollector] AI 验证无结果返回")
+            return
+
+        valid_count = 0
+        suspicious_count = 0
+        conn = db.get_db()
+        try:
+            for idx, judgment, reason in judgments:
+                item = pending[idx]
+                db.mark_ai_validated(conn, item["id"], judgment)
+                if judgment == "有效":
+                    valid_count += 1
+                elif judgment == "可疑":
+                    suspicious_count += 1
+                logger.info(f"[ReferralCollector] #{item['id']} {item['company_name']}/{item['code']} → {judgment} ({reason})")
+        finally:
+            conn.close()
+
+        self._stats["total_ai_validated"] += valid_count + suspicious_count
+        logger.info(f"[ReferralCollector] AI 验证完成：有效 {valid_count}，可疑 {suspicious_count}，跳过 {len(pending) - valid_count - suspicious_count}")
 
     def _refresh_expiry_status(self):
         """刷新所有内推码的过期状态。"""

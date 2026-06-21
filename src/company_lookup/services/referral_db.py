@@ -16,6 +16,7 @@ def get_db() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     _create_tables(conn)
+    _migrate(conn)
     return conn
 
 
@@ -25,7 +26,7 @@ def _create_tables(conn: sqlite3.Connection):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             company_id INTEGER,
             company_name TEXT NOT NULL,
-            platform TEXT NOT NULL CHECK(platform IN ('脉脉','知乎','用户提交','其他')),
+            platform TEXT NOT NULL,
             platform_url TEXT DEFAULT '',
             code TEXT NOT NULL,
             referral_link TEXT DEFAULT '',
@@ -33,12 +34,14 @@ def _create_tables(conn: sqlite3.Connection):
             recruiter_title TEXT DEFAULT '',
             description TEXT DEFAULT '',
             positions TEXT DEFAULT '[]',
+            raw_content TEXT DEFAULT '',
             posted_at TEXT,
             collected_at TEXT DEFAULT (datetime('now','localtime')),
             expires_at TEXT,
-            status TEXT CHECK(status IN ('有效','可能已过期','已过期','待验证')) DEFAULT '待验证',
-            source_type TEXT CHECK(source_type IN ('采集','用户提交','请求追踪')) DEFAULT '采集',
+            status TEXT CHECK(status IN ('有效','可能已过期','已过期','待验证','可疑')) DEFAULT '待验证',
+            source_type TEXT DEFAULT '采集',
             expire_reports INTEGER DEFAULT 0,
+            ai_validated INTEGER DEFAULT 0,
             created_at TEXT DEFAULT (datetime('now','localtime')),
             updated_at TEXT DEFAULT (datetime('now','localtime'))
         )
@@ -55,13 +58,22 @@ def _create_tables(conn: sqlite3.Connection):
     conn.commit()
 
 
+def _migrate(conn: sqlite3.Connection):
+    """兼容旧表结构：新增 raw_content / ai_validated 列。"""
+    existing = [r["name"] for r in conn.execute("PRAGMA table_info(referral_codes)").fetchall()]
+    if "raw_content" not in existing:
+        conn.execute("ALTER TABLE referral_codes ADD COLUMN raw_content TEXT DEFAULT ''")
+    if "ai_validated" not in existing:
+        conn.execute("ALTER TABLE referral_codes ADD COLUMN ai_validated INTEGER DEFAULT 0")
+
+
 def insert_referral(conn: sqlite3.Connection, data: dict) -> int:
     cursor = conn.execute("""
         INSERT INTO referral_codes
             (company_id, company_name, platform, platform_url, code, referral_link,
              recruiter_name, recruiter_title, description, positions,
-             posted_at, status, source_type)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             raw_content, posted_at, status, source_type)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data.get("company_id"),
         data["company_name"],
@@ -73,6 +85,7 @@ def insert_referral(conn: sqlite3.Connection, data: dict) -> int:
         data.get("recruiter_title", ""),
         data.get("description", ""),
         data.get("positions", "[]"),
+        data.get("raw_content", ""),
         data.get("posted_at"),
         data.get("status", "待验证"),
         data.get("source_type", "采集"),
@@ -84,6 +97,15 @@ def insert_referral(conn: sqlite3.Connection, data: dict) -> int:
 def update_status(conn: sqlite3.Connection, code_id: int, status: str):
     conn.execute(
         "UPDATE referral_codes SET status=?, updated_at=datetime('now','localtime') WHERE id=?",
+        (status, code_id),
+    )
+    conn.commit()
+
+
+def mark_ai_validated(conn: sqlite3.Connection, code_id: int, status: str):
+    """AI 验证后更新状态 + 标记已验证。"""
+    conn.execute(
+        "UPDATE referral_codes SET status=?, ai_validated=1, updated_at=datetime('now','localtime') WHERE id=?",
         (status, code_id),
     )
     conn.commit()
@@ -102,15 +124,17 @@ def add_feedback(conn: sqlite3.Connection, code_id: int, feedback: str):
 
 
 def get_by_company(conn: sqlite3.Connection, company_name: str, limit: int = 20):
+    """仅返回已验证为有效的内推码。"""
     cursor = conn.execute(
-        "SELECT * FROM referral_codes WHERE company_name LIKE ? ORDER BY collected_at DESC LIMIT ?",
+        "SELECT * FROM referral_codes WHERE company_name LIKE ? AND status='有效' ORDER BY collected_at DESC LIMIT ?",
         (f"%{company_name}%", limit),
     )
     return [dict(r) for r in cursor.fetchall()]
 
 
 def search(conn: sqlite3.Connection, keyword: str = "", category: str = "", limit: int = 50):
-    query = "SELECT * FROM referral_codes WHERE 1=1"
+    """仅搜索已验证为有效的内推码。"""
+    query = "SELECT * FROM referral_codes WHERE status='有效'"
     params = []
     if keyword:
         query += " AND (company_name LIKE ? OR description LIKE ? OR code LIKE ?)"
@@ -124,9 +148,19 @@ def search(conn: sqlite3.Connection, keyword: str = "", category: str = "", limi
     return [dict(r) for r in cursor.fetchall()]
 
 
-def get_all_active(conn: sqlite3.Connection, limit: int = 100):
+def get_pending_validation(conn: sqlite3.Connection, limit: int = 50):
+    """获取待 AI 验证的内推码（未验证且 status=待验证）。"""
     cursor = conn.execute(
-        "SELECT * FROM referral_codes WHERE status IN ('有效','待验证') ORDER BY collected_at DESC LIMIT ?",
+        "SELECT * FROM referral_codes WHERE ai_validated=0 AND status='待验证' ORDER BY collected_at ASC LIMIT ?",
+        (limit,),
+    )
+    return [dict(r) for r in cursor.fetchall()]
+
+
+def get_all_active(conn: sqlite3.Connection, limit: int = 100):
+    """获取所有已验证有效 + 用户反馈仍有效的内推码。"""
+    cursor = conn.execute(
+        "SELECT * FROM referral_codes WHERE status='有效' ORDER BY collected_at DESC LIMIT ?",
         (limit,),
     )
     return [dict(r) for r in cursor.fetchall()]

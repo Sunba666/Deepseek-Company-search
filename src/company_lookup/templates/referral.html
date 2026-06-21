@@ -27,6 +27,7 @@
     .badge-status-可能已过期 { background: #fef3c7; color: #92400e; }
     .badge-status-已过期 { background: #fee2e2; color: #991b1b; }
     .badge-status-待验证 { background: #e0e7ff; color: #3730a3; }
+    .badge-status-可疑 { background: #fce7f3; color: #9d174d; }
     .position-badge {
         font-size: 0.8rem;
         padding: 0.15rem 0.5rem;
@@ -66,35 +67,27 @@
 
 <div class="mb-4">
     <h2 class="gradient-title"><i class="bi bi-share"></i> 内推码</h2>
-    <p class="text-muted">聚合脉脉、知乎等平台的内推信息，帮你找到有效的内推机会</p>
+    <p class="text-muted">AI 从脉脉、知乎等平台持续采集并验证有效内推码，帮你找到可靠的内推机会</p>
 </div>
 
 <!-- 统计卡片 -->
 <div class="row mb-4 g-3">
-    <div class="col-md-3 col-6">
+    <div class="col-md-4 col-6">
         <div class="stat-card">
             <div class="num">{{ codes|length }}</div>
             <div class="label">有效内推码</div>
         </div>
     </div>
-    <div class="col-md-3 col-6">
+    <div class="col-md-4 col-6">
         <div class="stat-card">
             <div class="num">{{ categories|length }}</div>
             <div class="label">职位分类</div>
         </div>
     </div>
-    <div class="col-md-3 col-6">
+    <div class="col-md-4 col-6">
         <div class="stat-card">
             <div class="num" id="total-report-count">0</div>
             <div class="label">用户反馈</div>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="stat-card">
-            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#submitModal">
-                <i class="bi bi-plus-lg"></i> 提交内推码
-            </button>
-            <div class="label mt-1" style="font-size:0.8rem;">或请求追踪某公司</div>
         </div>
     </div>
 </div>
@@ -123,52 +116,7 @@
     {% include "partials/referral_list.html" %}
 </div>
 
-<!-- 提交内推码弹窗 -->
-<div class="modal fade" id="submitModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-send"></i> 提交内推码</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form hx-post="/referral/submit" hx-target="#submitResult" hx-swap="innerHTML">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">公司名称 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="company_name" required placeholder="例：字节跳动">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">内推码 <small class="text-muted">（留空=仅请求追踪）</small></label>
-                        <input type="text" class="form-control" name="code" placeholder="例：NTAXXXX">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">内推人称呼</label>
-                        <input type="text" class="form-control" name="recruiter_name" placeholder="选填">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">适用职位 <small class="text-muted">（逗号分隔）</small></label>
-                        <input type="text" class="form-control" name="positions" placeholder="例：技术,产品,设计">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">备注</label>
-                        <textarea class="form-control" name="description" rows="2" placeholder="选填"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">内推链接</label>
-                        <input type="url" class="form-control" name="referral_link" placeholder="选填">
-                    </div>
-                    <div id="submitResult"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">提交</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
-// 分类按钮点击 → 设 hidden 值 → 提交表单 → HTMX 发 GET
 function selectCategory(btn) {
     document.querySelectorAll('#categoryFilter .btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -176,7 +124,6 @@ function selectCategory(btn) {
     document.getElementById('searchForm').requestSubmit();
 }
 
-// 搜索输入时清除分类高亮（自动回到"全部"）
 document.getElementById('searchKeyword').addEventListener('input', function() {
     document.querySelectorAll('#categoryFilter .btn').forEach(b => b.classList.remove('active'));
     document.querySelector('#categoryFilter .btn[data-category=""]').classList.add('active');

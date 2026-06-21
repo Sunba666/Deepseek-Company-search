@@ -120,6 +120,7 @@ class MaimaiScraper(Scraper):
             "recruiter_name": recruiter_name,
             "recruiter_title": user.get("position", "") or user.get("title", ""),
             "description": content[:500] if content else "",
+            "raw_content": content[:1500] if content else "",
             "positions": json.dumps(positions, ensure_ascii=False),
             "posted_at": feed.get("created_at") or feed.get("publish_time", ""),
             "referral_link": self._extract_link(content),

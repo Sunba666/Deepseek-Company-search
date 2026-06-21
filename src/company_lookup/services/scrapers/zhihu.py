@@ -143,6 +143,7 @@ class ZhihuScraper(Scraper):
             "recruiter_name": author_name,
             "recruiter_title": author_title,
             "description": (title + "\n" + content[:300]) if content else title,
+            "raw_content": (title + "\n" + content[:1500]) if content else title,
             "positions": json.dumps(positions, ensure_ascii=False),
             "posted_at": str(created_time) if created_time else "",
             "referral_link": self._extract_link(full_text),
