@@ -157,7 +157,7 @@ function showSuggestions(input, index) {
         if (suggestions.length > 0) {
             dropdown.innerHTML = `
                 <div class="suggestions-list">
-                    ${suggestions.map(s => `<div class="suggestion-item" onclick="selectCompany(${index}, '${s}')">${s}</div>`).join('')}
+                    ${suggestions.map(s => `<div class="suggestion-item" data-company="${s.replace(/"/g, '&quot;')}" onclick="selectCompany(${index}, this.dataset.company)">${s}</div>`).join('')}
                 </div>
             `;
             dropdown.style.display = 'block';

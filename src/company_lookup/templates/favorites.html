@@ -25,7 +25,7 @@
                         </div>
                         <div class="d-flex justify-content-between align-items-center mt-1">
                             <small class="text-muted">关注于 {{ fav.added_at[:10] }}</small>
-                            <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); event.preventDefault(); toggleFav({{ fav.id }}, '{{ fav.name }}')">
+                            <button class="btn btn-sm btn-outline-danger" data-id="{{ fav.id }}" data-name="{{ fav.name|e }}" onclick="event.stopPropagation(); event.preventDefault(); toggleFav(this.dataset.id, this.dataset.name)">
                                 <i class="bi bi-star-fill"></i> 取消关注
                             </button>
                         </div>

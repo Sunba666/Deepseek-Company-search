@@ -11,7 +11,7 @@
                 <span class="badge badge-status-{{ code._status_display }} ms-1">{{ code._status_display }}</span>
                 <div class="mt-1">
                     <strong style="font-family: 'Courier New', monospace; letter-spacing: 1px;">{{ code.code }}</strong>
-                    <button class="btn btn-sm btn-outline-secondary py-0 px-1 ms-1" onclick="navigator.clipboard.writeText('{{ code.code }}')" title="复制">
+                    <button class="btn btn-sm btn-outline-secondary py-0 px-1 ms-1" data-code="{{ code.code|e }}" onclick="navigator.clipboard.writeText(this.dataset.code)" title="复制">
                         <i class="bi bi-clipboard" style="font-size:0.8rem;"></i>
                     </button>
                 </div>

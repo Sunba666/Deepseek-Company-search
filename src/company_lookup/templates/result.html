@@ -251,7 +251,7 @@
 
 <script>
 function refreshResult() {
-    const companyName = "{{ company_name }}";
+    const companyName = {{ company_name|tojson }};
     const refreshBtn = document.getElementById('refresh-btn');
     const content = document.getElementById('result-content');
     

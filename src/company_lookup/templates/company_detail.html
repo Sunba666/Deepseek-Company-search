@@ -189,7 +189,7 @@
 {% block scripts %}
 <script>
 const COMPANY_ID = {{ company.id }};
-const COMPANY_NAME = "{{ company.canonical_name }}";
+const COMPANY_NAME = {{ company.canonical_name|tojson }};
 
 function toggleFavorite() {
     fetch('/api/favorites/toggle', {

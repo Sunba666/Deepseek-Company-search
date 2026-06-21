@@ -114,8 +114,6 @@ def _register_middleware(app):
 
     @app.before_request
     def before_request():
-        if request.data:
-            request.data = request.data.decode("utf-8", errors="ignore").encode("utf-8")
         # 记录请求开始时间
         request._start_time = time.time()
 

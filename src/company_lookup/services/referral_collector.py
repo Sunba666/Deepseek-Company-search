@@ -20,8 +20,6 @@ logger = logging.getLogger(__name__)
 # 采集周期（秒）
 COLLECT_INTERVAL = 3600  # 每 1 小时采集一轮
 AI_VALIDATE_INTERVAL = 1800  # 每 30 分钟 AI 验证一轮
-# 热度阈值：只采集热度高于此值的公司
-HOTNESS_THRESHOLD = 30
 # 每轮最多采集的公司数
 MAX_COMPANIES_PER_ROUND = 50
 
@@ -159,14 +157,14 @@ class ReferralCollector:
 
         # 从知识库获取热度高的公司
         try:
-            from .knowledge_db import get_db as get_kdb
-            kconn = get_kdb()
+            from .knowledge_db import _get_conn
+            kconn = _get_conn()
             try:
                 cursor = kconn.execute(
-                    "SELECT standard_name FROM companies WHERE hotness >= ? ORDER BY hotness DESC LIMIT ?",
-                    (HOTNESS_THRESHOLD, MAX_COMPANIES_PER_ROUND),
+                    "SELECT canonical_name FROM companies WHERE hotness = 'high' ORDER BY query_count DESC LIMIT ?",
+                    (MAX_COMPANIES_PER_ROUND,),
                 )
-                companies.extend([r["standard_name"] for r in cursor.fetchall()])
+                companies.extend([r["canonical_name"] for r in cursor.fetchall()])
             finally:
                 kconn.close()
         except Exception as e:

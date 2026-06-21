@@ -449,7 +449,7 @@ function showSuggestion(data, useAsync = false) {
                 <button type="button" class="btn-close" onclick="hideSuggestion()"></button>
             </div>
             <div class="mt-2">
-                <button class="btn btn-primary btn-sm me-2" onclick="confirmSearch('${data.matched_name}', ${useAsync})">
+                <button class="btn btn-primary btn-sm me-2" data-name="${data.matched_name}" onclick="confirmSearch(this.dataset.name, ${useAsync})">
                     <i class="bi bi-check-circle"></i> 确认查询
                 </button>
                 <button class="btn btn-outline-secondary btn-sm" onclick="hideSuggestion()">
@@ -488,7 +488,8 @@ function showCandidates(candidates, useAsync = false) {
     candidates.forEach(candidate => {
         html += `
             <button class="list-group-item list-group-item-action"
-                    onclick="confirmSearch('${candidate.name}', ${useAsync})">
+                    data-name="${candidate.name}"
+                    onclick="confirmSearch(this.dataset.name, ${useAsync})">
                 <strong>${candidate.name}</strong>
                 <span class="badge bg-secondary float-end">${candidate.source}</span>
                 <span class="badge bg-info float-end me-2">${candidate.confidence}</span>
@@ -746,9 +747,9 @@ function renderSearchHistory() {
     }
     container.classList.add('show');
         list.innerHTML = history.map(function(h) { 
-        var safeName = h.replace(/'/g, "\\u2019");
+        var safeName = h.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&apos;").replace(/"/g, "&quot;");
         return '<button class="history-item" data-company="' + safeName + '">' +
-        '<i class="bi bi-clock me-1"></i>' + h + '</button>';
+        '<i class="bi bi-clock me-1"></i>' + safeName + '</button>';
     }).join('');;
 }
 

@@ -9,7 +9,7 @@
         </div>
         <div>
             <span class="code-tag">{{ code.code }}</span>
-            <button class="btn btn-sm btn-outline-secondary ms-1" onclick="navigator.clipboard.writeText('{{ code.code }}')" title="复制内推码">
+            <button class="btn btn-sm btn-outline-secondary ms-1" data-code="{{ code.code|e }}" onclick="navigator.clipboard.writeText(this.dataset.code)" title="复制内推码">
                 <i class="bi bi-clipboard"></i>
             </button>
         </div>

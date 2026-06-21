@@ -9,7 +9,7 @@
                 <p><strong>您是否想查询：</strong></p>
                 <div class="d-flex flex-wrap gap-2">
                     {% for name in resolve.related %}
-                    <button class="btn btn-outline-primary btn-sm" hx-post="/company/search" hx-vals='{"company_name": "{{ name }}"}' hx-target="#report-result">{{ name }}</button>
+                    <button class="btn btn-outline-primary btn-sm" hx-post="/company/search" hx-vals='{"company_name": "{{ name|e }}"}' hx-target="#report-result">{{ name }}</button>
                     {% endfor %}
                 </div>
             </div>

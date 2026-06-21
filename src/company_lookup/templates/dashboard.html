@@ -47,7 +47,7 @@
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 <script>
 const companyData = {{ data|tojson|safe if data else '{}' }};
-const companyName = "{{ company or '' }}";
+const companyName = {{ company|tojson if company else "''" }};
 
 // 综合评分已在服务端计算并显示，无需客户端计算
 let aiAnalysisLoaded = false;
