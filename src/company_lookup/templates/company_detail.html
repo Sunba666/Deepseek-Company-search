@@ -126,6 +126,14 @@
     </div>
     {% endif %}
 
+    <!-- 内推码 -->
+    <div hx-get="/referral/company/{{ company.canonical_name }}" hx-trigger="load" hx-swap="innerHTML">
+        <div class="text-center py-3 text-muted">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            <small class="ms-2">加载内推码…</small>
+        </div>
+    </div>
+
     <div class="small text-muted">
         <i class="bi bi-database"></i> 来源：知识库 · DeepSeek 蒸馏
         {% if company.last_verified_at %} · 更新于 {{ company.last_verified_at[:10] }}{% endif %}
