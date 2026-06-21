@@ -82,6 +82,12 @@ def create_app(config_name=None):
             log.info("[App] ✅ 内推码采集引擎已自动启动")
         except Exception as e:
             log.warning(f"[App] 内推码采集引擎启动失败: {e}")
+        try:
+            from .services.discovery_engine import discovery_engine
+            discovery_engine.start()
+            log.info("[App] ✅ 持续发现引擎已自动启动")
+        except Exception as e:
+            log.warning(f"[App] 持续发现引擎启动失败: {e}")
 
     # 使用 Flask 的 first_request 或 after_request 来避免阻塞
     import threading

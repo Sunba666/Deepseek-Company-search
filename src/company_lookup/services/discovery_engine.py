@@ -81,6 +81,8 @@ class DiscoveryEngine:
             "started_at": None,
             "stopped_at": None,
             "is_running": False,
+            "crash_count": 0,
+            "last_error": None,
         }
 
     # ═══════════════════════════════════════════════
@@ -130,52 +132,62 @@ class DiscoveryEngine:
         from ..services.knowledge_db import knowledge_db
 
         while not self._stop_event.is_set():
-            self._round_counter += 1
-            strategy = ROUND_STRATEGIES[self._round_counter % len(ROUND_STRATEGIES)]
-            round_num = self._round_counter
-
-            logger.info(f"[Discovery] ═══ 第 {round_num} 轮：{strategy['name']} ═══")
-
-            round_start = time.time()
-            round_result = {
-                "round": round_num,
-                "strategy": strategy["name"],
-                "discovered": 0,
-                "added": 0,
-                "failed": 0,
-                "duration_s": 0,
-            }
-
             try:
-                if strategy["name"] == "用户搜索日志挖掘":
-                    self._mine_from_query_log(knowledge_db, round_result)
-                elif strategy["name"] == "关联企业扩展":
-                    self._mine_from_relations(knowledge_db, round_result)
-                else:
-                    self._mine_by_keywords(strategy, knowledge_db, round_result)
+                self._round_counter += 1
+                strategy = ROUND_STRATEGIES[self._round_counter % len(ROUND_STRATEGIES)]
+                round_num = self._round_counter
+
+                logger.info(f"[Discovery] ═══ 第 {round_num} 轮：{strategy['name']} ═══")
+
+                round_start = time.time()
+                round_result = {
+                    "round": round_num,
+                    "strategy": strategy["name"],
+                    "discovered": 0,
+                    "added": 0,
+                    "failed": 0,
+                    "duration_s": 0,
+                }
+
+                try:
+                    if strategy["name"] == "用户搜索日志挖掘":
+                        self._mine_from_query_log(knowledge_db, round_result)
+                    elif strategy["name"] == "关联企业扩展":
+                        self._mine_from_relations(knowledge_db, round_result)
+                    else:
+                        self._mine_by_keywords(strategy, knowledge_db, round_result)
+
+                except Exception as e:
+                    logger.error(f"[Discovery] 第 {round_num} 轮异常: {e}", exc_info=True)
+                    round_result["error"] = str(e)
+
+                round_result["duration_s"] = round(time.time() - round_start, 1)
+                self._stats["total_rounds"] += 1
+                self._stats["total_discovered"] += round_result["discovered"]
+                self._stats["total_added"] += round_result["added"]
+                self._stats["total_failed"] += round_result["failed"]
+                self._stats["rounds"].append(round_result)
+
+                logger.info(
+                    f"[Discovery] 第 {round_num} 轮完成: "
+                    f"发现{round_result['discovered']} 新增{round_result['added']} "
+                    f"失败{round_result['failed']} ({round_result['duration_s']}s)"
+                )
+
+                # 等待下一轮（可中断）
+                interval = random.randint(MIN_INTERVAL, MAX_INTERVAL)
+                logger.info(f"[Discovery] 下一轮等待 {interval//60} 分钟...")
+                self._stop_event.wait(interval)
 
             except Exception as e:
-                logger.error(f"[Discovery] 第 {round_num} 轮异常: {e}", exc_info=True)
-                round_result["error"] = str(e)
-
-            round_result["duration_s"] = round(time.time() - round_start, 1)
-            self._stats["total_rounds"] += 1
-            self._stats["total_discovered"] += round_result["discovered"]
-            self._stats["total_added"] += round_result["added"]
-            self._stats["total_failed"] += round_result["failed"]
-            self._stats["rounds"].append(round_result)
-
-            # 输出本轮摘要
-            logger.info(
-                f"[Discovery] 第 {round_num} 轮完成: "
-                f"发现{round_result['discovered']} 新增{round_result['added']} "
-                f"失败{round_result['failed']} ({round_result['duration_s']}s)"
-            )
-
-            # 等待下一轮（可中断）
-            interval = random.randint(MIN_INTERVAL, MAX_INTERVAL)
-            logger.info(f"[Discovery] 下一轮等待 {interval//60} 分钟...")
-            self._stop_event.wait(interval)
+                logger.exception(f"[Discovery] 主循环全局异常: {e}")
+                self._stats["last_error"] = f"{type(e).__name__}: {e}"
+                self._stats["crash_count"] = self._stats.get("crash_count", 0) + 1
+                crash_count = self._stats["crash_count"]
+                backoff = min(10 * 3 ** (crash_count - 1), 300)
+                logger.warning(f"[Discovery] 第 {crash_count} 次崩溃，{backoff}s 后重试")
+                self._stop_event.wait(backoff)
+                continue
 
         self._stats["stopped_at"] = datetime.now().isoformat()
         self._stats["is_running"] = False
