@@ -955,14 +955,14 @@ def api_api_status():
     logger = logging.getLogger(__name__)
 
     try:
-        logger.info("🔍 正在获取API状态...")
+        logger.info("获取API状态...")
 
         from ..services import ReportService
 
         service = ReportService()
         status = service.get_api_status()
 
-        logger.info(f"📦 获取到的状态: {status}")
+        logger.info(f"获取到的状态: {status}")
 
         configured_count = 0
         total_count = 0
@@ -987,7 +987,7 @@ def api_api_status():
         else:
             tip = "🔴 所有API均未配置，当前使用模拟数据"
 
-        logger.info(f"✅ API状态获取成功: {configured_count}/{total_count} 已配置, 模式: {mode}")
+        logger.info(f"API状态获取成功: {configured_count}/{total_count} 已配置, 模式: {mode}")
 
         return jsonify(
             {
@@ -1006,13 +1006,13 @@ def api_api_status():
         )
 
     except ImportError as e:
-        logger.error(f"❌ 导入模块失败: {str(e)}")
+        logger.error(f"导入模块失败: {str(e)}")
         return jsonify(
             {"code": 1, "status": "error", "message": f"服务模块导入失败: {str(e)}", "data": None}
         )
 
     except Exception as e:
-        logger.error(f"❌ API状态获取异常: {str(e)}")
+        logger.error(f"API状态获取异常: {str(e)}")
         import traceback
 
         logger.error(traceback.format_exc())

@@ -134,10 +134,6 @@ class ReportService:
                     **SentimentSearchOrchestrator().clients[0].get_status(),
                     "apply_url": "https://app.tavily.com/",
                 },
-                "bing_news": {
-                    **SentimentSearchOrchestrator().clients[1].get_status(),
-                    "apply_url": "https://portal.azure.com/",
-                },
             },
             "risk_apis": {
                 "qixinbao": {
