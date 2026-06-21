@@ -100,19 +100,23 @@
 </div>
 
 <!-- 搜索 + 筛选栏 -->
-<div class="filter-bar">
+<form hx-get="/referral/search" hx-target="#referral-list" hx-trigger="submit, keyup changed delay:300ms from:#searchKeyword"
+      class="filter-bar" id="searchForm">
     <div class="input-group" style="max-width: 350px;">
         <span class="input-group-text"><i class="bi bi-search"></i></span>
-        <input type="text" class="form-control" id="searchKeyword" placeholder="搜公司名或内推码..."
-               hx-get="/referral/search" hx-trigger="keyup changed delay:300ms" hx-target="#referral-list" name="keyword">
+        <input type="text" class="form-control" id="searchKeyword" name="keyword"
+               placeholder="搜公司名或内推码...">
     </div>
     <div class="btn-group" role="group" id="categoryFilter">
-        <button class="btn btn-outline-primary btn-sm active" data-category="" hx-get="/referral/search" hx-target="#referral-list">全部</button>
+        <button type="button" class="btn btn-outline-primary btn-sm active" data-category=""
+                onclick="selectCategory(this)">全部</button>
         {% for cat in categories %}
-        <button class="btn btn-outline-primary btn-sm" data-category="{{ cat }}" hx-get="/referral/search?category={{ cat }}" hx-target="#referral-list">{{ cat }}</button>
+        <button type="button" class="btn btn-outline-primary btn-sm" data-category="{{ cat }}"
+                onclick="selectCategory(this)">{{ cat }}</button>
         {% endfor %}
     </div>
-</div>
+    <input type="hidden" name="category" id="hiddenCategory" value="">
+</form>
 
 <!-- 内推码列表 -->
 <div id="referral-list">
@@ -164,24 +168,19 @@
 </div>
 
 <script>
-// 职位分类筛选切换
-document.getElementById('categoryFilter').addEventListener('click', function(e) {
-    if (e.target.classList.contains('btn')) {
-        this.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        // 同步关键词搜索
-        const kw = document.getElementById('searchKeyword').value;
-        const cat = e.target.dataset.category || '';
-        let url = '/referral/search?keyword=' + encodeURIComponent(kw);
-        if (cat) url += '&category=' + encodeURIComponent(cat);
-        htmx.ajax('GET', url, {target: '#referral-list', swap: 'innerHTML'});
-    }
-});
+// 分类按钮点击 → 设 hidden 值 → 提交表单 → HTMX 发 GET
+function selectCategory(btn) {
+    document.querySelectorAll('#categoryFilter .btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('hiddenCategory').value = btn.dataset.category || '';
+    document.getElementById('searchForm').requestSubmit();
+}
 
-// 搜索时清除分类高亮
+// 搜索输入时清除分类高亮（自动回到"全部"）
 document.getElementById('searchKeyword').addEventListener('input', function() {
     document.querySelectorAll('#categoryFilter .btn').forEach(b => b.classList.remove('active'));
     document.querySelector('#categoryFilter .btn[data-category=""]').classList.add('active');
+    document.getElementById('hiddenCategory').value = '';
 });
 </script>
 {% endblock %}
