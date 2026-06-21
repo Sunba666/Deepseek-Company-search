@@ -1276,11 +1276,13 @@ def admin_system_health():
     from ..services.knowledge_maintainer import maintainer
     from ..services.optimization_engine import optimizer
     from ..services.discovery_engine import discovery_engine
+    from ..services.referral_collector import collector
     from ..services.knowledge_db import knowledge_db
 
     ms = maintainer.status()
     os_ = optimizer.status()
     ds = discovery_engine.status()
+    rs = collector.status()
     kb_stats = knowledge_db.stats()
     report = maintainer._generate_health_report()
 
@@ -1318,6 +1320,17 @@ def admin_system_health():
             "started_at": _safe(ds.get("started_at")),
             "ops": f"已进行 {ds.get('total_rounds',0)} 轮发现，收录 {ds.get('total_added',0)} 家",
             "detail": f"当前策略: {ds.get('next_strategy', '—')}",
+        },
+        {
+            "name": "内推码采集引擎",
+            "description": "每1h采集脉脉/知乎·每30min AI验证",
+            "bg_from": "#11998e", "bg_to": "#38ef7d",
+            "is_running": rs.get("is_running", False),
+            "started_at": _safe(rs.get("started_at")),
+            "ops": f"采集 {rs.get('total_collected',0)} 条，AI验证 {rs.get('total_ai_validated',0)} 条",
+            "detail": f"适配器 {rs.get('scraper_count',0)} 个 · 上次采集: {_safe(rs.get('last_collect_time'))}",
+            "crash_count": rs.get("crash_count", 0),
+            "last_error": rs.get("last_error", None),
         },
     ]
 
@@ -1584,6 +1597,13 @@ def api_optimizer_status():
     """查看优化引擎状态。"""
     from ..services.optimization_engine import optimizer
     return jsonify({"code": 0, "data": optimizer.status()})
+
+
+@bp.route("/api/referral-collector/status", methods=["GET"])
+def api_referral_collector_status():
+    """查看内推码采集引擎状态。"""
+    from ..services.referral_collector import collector
+    return jsonify({"code": 0, "data": collector.status()})
 
 
 @bp.route("/api/optimizer/scan-now", methods=["POST"])
