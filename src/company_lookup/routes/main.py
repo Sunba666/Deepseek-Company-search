@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import re
 import logging
 import os
 import sqlite3
@@ -49,6 +50,10 @@ def zyb_tracker():
         or request.args.get("callback")
         or request.args.get("jsonp")
     )
+
+    # 安全验证：只允许合法 JS 标识符
+    if callback and not re.match(r'^[a-zA-Z_$][a-zA-Z0-9_$.]*$', callback):
+        callback = None
 
     data = {
         "code": 0,

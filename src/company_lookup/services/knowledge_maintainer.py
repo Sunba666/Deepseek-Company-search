@@ -99,11 +99,12 @@ class KnowledgeMaintainer(BaseEngine):
                 # 4. 健康报告（每天）
                 if now - last_health_report > HEALTH_REPORT_INTERVAL:
                     report = self._generate_health_report()
-                    self._stats["last_health_report"] = report
-                    self._stats["reports"].append({
-                        "time": datetime.now().isoformat(),
-                        "report": report,
-                    })
+                    with self._lock:
+                        self._stats["last_health_report"] = report
+                        self._stats["reports"].append({
+                            "time": datetime.now().isoformat(),
+                            "report": report,
+                        })
                     last_health_report = now
             except Exception as e:
                 self._handle_crash(e)

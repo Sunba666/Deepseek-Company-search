@@ -73,8 +73,7 @@ class OptimizationEngine(BaseEngine):
         super().stop()
 
     def status(self) -> Dict:
-        s = dict(self._stats)
-        s["is_running"] = self.is_running()
+        s = super().status()
         s["recent_fixes"] = self._fixes_log[-5:] if self._fixes_log else []
         s["recent_issues"] = self._issues_log[-5:] if self._issues_log else []
         return _sanitize_for_json(s)
@@ -580,9 +579,10 @@ class OptimizationEngine(BaseEngine):
     def _process_issue(self, issue: Dict):
         """处理单个问题：记录 → 尝试自动修复 → 验证 → 记录结果。"""
         priority = issue.get("priority", P2_EXPERIENCE)
-        self._stats["total_issues"] += 1
-        self._stats["fixes_by_priority"][priority] = \
-            self._stats["fixes_by_priority"].get(priority, 0) + 1
+        with self._lock:
+            self._stats["total_issues"] += 1
+            self._stats["fixes_by_priority"][priority] = \
+                self._stats["fixes_by_priority"].get(priority, 0) + 1
 
         # 存储时移除不可序列化的 fix_fn
         log_issue = {k: v for k, v in issue.items() if k != 'fix_fn'}

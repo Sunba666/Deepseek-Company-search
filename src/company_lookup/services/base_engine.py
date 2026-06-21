@@ -28,6 +28,7 @@ class BaseEngine:
         self._name = name
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
+        self._lock = threading.Lock()
         self._stats: Dict = {
             "is_running": False,
             "started_at": None,
@@ -46,8 +47,9 @@ class BaseEngine:
             self._logger.info(f"[{self._name}] 已在运行中")
             return
         self._stop_event.clear()
-        self._stats["started_at"] = datetime.now().isoformat()
-        self._stats["is_running"] = True
+        with self._lock:
+            self._stats["started_at"] = datetime.now().isoformat()
+            self._stats["is_running"] = True
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
         self._logger.info(f"[{self._name}] ✅ 引擎已启动")
@@ -56,14 +58,16 @@ class BaseEngine:
         if not self.is_running():
             return
         self._stop_event.set()
-        self._stats["is_running"] = False
+        with self._lock:
+            self._stats["is_running"] = False
         self._logger.info(f"[{self._name}] ⏹ 引擎已停止")
 
     def is_running(self) -> bool:
         return self._thread is not None and self._thread.is_alive()
 
     def status(self) -> Dict:
-        s = dict(self._stats)
+        with self._lock:
+            s = dict(self._stats)
         s["is_running"] = self.is_running()
         return s
 
@@ -74,16 +78,28 @@ class BaseEngine:
     def _handle_crash(self, e: Exception):
         """崩溃处理：日志 + 指数退避休眠。"""
         self._logger.exception(f"[{self._name}] 主循环异常: {e}")
-        self._stats["last_error"] = f"{type(e).__name__}: {e}"
-        self._stats["crash_count"] = self._stats.get("crash_count", 0) + 1
-        crash_count = self._stats["crash_count"]
+        with self._lock:
+            self._stats["last_error"] = f"{type(e).__name__}: {e}"
+            self._stats["crash_count"] = self._stats.get("crash_count", 0) + 1
+            crash_count = self._stats["crash_count"]
         backoff = min(10 * 3 ** (crash_count - 1), 300)
         self._logger.warning(f"[{self._name}] 第 {crash_count} 次崩溃，{backoff}s 后重试")
         self._stop_event.wait(backoff)
 
     def _heartbeat(self):
         """记录心跳时间戳。"""
-        self._stats["last_heartbeat"] = datetime.now().isoformat()
+        with self._lock:
+            self._stats["last_heartbeat"] = datetime.now().isoformat()
+
+    def _set_stat(self, key: str, value):
+        """线程安全设置 _stats 字段。"""
+        with self._lock:
+            self._stats[key] = value
+
+    def _incr_stat(self, key: str, amount: int = 1):
+        """线程安全递增 _stats 字段。"""
+        with self._lock:
+            self._stats[key] = self._stats.get(key, 0) + amount
 
     def _run_loop(self):
         """主循环 — 子类必须覆盖。"""

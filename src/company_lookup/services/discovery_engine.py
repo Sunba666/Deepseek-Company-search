@@ -135,11 +135,12 @@ class DiscoveryEngine(BaseEngine):
                     round_result["error"] = str(e)
 
                 round_result["duration_s"] = round(time.time() - round_start, 1)
-                self._stats["total_rounds"] += 1
-                self._stats["total_discovered"] += round_result["discovered"]
-                self._stats["total_added"] += round_result["added"]
-                self._stats["total_failed"] += round_result["failed"]
-                self._stats["rounds"].append(round_result)
+                with self._lock:
+                    self._stats["total_rounds"] += 1
+                    self._stats["total_discovered"] += round_result["discovered"]
+                    self._stats["total_added"] += round_result["added"]
+                    self._stats["total_failed"] += round_result["failed"]
+                    self._stats["rounds"].append(round_result)
 
                 logger.info(
                     f"[Discovery] 第 {round_num} 轮完成: "
