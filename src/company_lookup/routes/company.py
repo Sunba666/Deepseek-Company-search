@@ -760,7 +760,7 @@ def resume_optimizer():
             try:
                 file_data.decode('utf-8')
                 is_txt = True
-            except:
+            except Exception:
                 pass
 
         if not is_pdf and not is_docx and not is_txt:

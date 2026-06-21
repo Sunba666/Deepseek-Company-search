@@ -23,11 +23,11 @@ def route_errors(default_message: str = "操作失败，请稍后重试"):
       except Exception as exc:
         try:
             logger.exception("%s: %s", fn.__name__, exc)
-        except:
+        except Exception:
             pass
         try:
             return error_alert(f"{default_message}：{str(exc)[:200]}")
-        except:
+        except Exception:
             return error_alert(default_message)
 
     return wrapper

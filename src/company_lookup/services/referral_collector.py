@@ -7,13 +7,13 @@ ReferralCollector — 内推码后台采集引擎。
 """
 import json
 import logging
-import threading
 import time
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List
 
+from .base_engine import BaseEngine
 from . import referral_db as db
-from .referral_service import evaluate_expiry, STALE_DAYS
+from .referral_service import evaluate_expiry
 
 logger = logging.getLogger(__name__)
 
@@ -24,24 +24,19 @@ AI_VALIDATE_INTERVAL = 1800  # 每 30 分钟 AI 验证一轮
 MAX_COMPANIES_PER_ROUND = 50
 
 
-class ReferralCollector:
+class ReferralCollector(BaseEngine):
     """内推码后台采集引擎。"""
 
     def __init__(self):
-        self._thread: Optional[threading.Thread] = None
-        self._stop_event = threading.Event()
+        super().__init__("ReferralCollector")
         self._scrapers: List = []
-        self._stats: Dict = {
-            "is_running": False,
-            "started_at": None,
+        self._stats.update({
             "last_collect_time": None,
             "last_ai_validate_time": None,
             "total_collected": 0,
             "total_ai_validated": 0,
             "total_errors": 0,
-            "last_error": None,
-            "crash_count": 0,
-        }
+        })
 
     def set_scrapers(self, scrapers: List):
         """注入采集适配器列表。"""
@@ -51,30 +46,8 @@ class ReferralCollector:
     #  公共接口（与 Maintainer 模式一致）
     # ═══════════════════════════════════════════════
 
-    def start(self):
-        if self.is_running():
-            logger.info("[ReferralCollector] 已在运行中")
-            return
-        self._stop_event.clear()
-        self._stats["started_at"] = datetime.now().isoformat()
-        self._stats["is_running"] = True
-        self._thread = threading.Thread(target=self._run_loop, daemon=True)
-        self._thread.start()
-        logger.info("[ReferralCollector] ✅ 内推码采集引擎已启动")
-
-    def stop(self):
-        if not self.is_running():
-            return
-        self._stop_event.set()
-        self._stats["is_running"] = False
-        logger.info("[ReferralCollector] ⏹ 内推码采集引擎已停止")
-
-    def is_running(self) -> bool:
-        return self._thread is not None and self._thread.is_alive()
-
     def status(self) -> Dict:
-        s = dict(self._stats)
-        s["is_running"] = self.is_running()
+        s = super().status()
         s["scraper_count"] = len(self._scrapers)
         return s
 
@@ -100,18 +73,11 @@ class ReferralCollector:
                     self._stats["last_ai_validate_time"] = datetime.now().isoformat()
 
             except Exception as e:
-                logger.exception(f"[ReferralCollector] 主循环异常: {e}")
-                self._stats["last_error"] = f"{type(e).__name__}: {e}"
-                self._stats["crash_count"] = self._stats.get("crash_count", 0) + 1
-                crash_count = self._stats["crash_count"]
-                backoff = min(10 * 3 ** (crash_count - 1), 300)
-                logger.warning(f"[ReferralCollector] 第 {crash_count} 次崩溃，{backoff}s 后重试")
-                self._stop_event.wait(backoff)
+                self._handle_crash(e)
                 continue
 
             self._stop_event.wait(60)  # 每分钟唤醒一次
-            # 心跳标记
-            self._stats["last_heartbeat"] = datetime.now().isoformat()
+            self._heartbeat()
             logger.debug("[ReferralCollector] [HEARTBEAT] alive")
 
     def _collect_round(self):

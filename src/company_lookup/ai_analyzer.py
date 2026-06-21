@@ -406,7 +406,7 @@ def _call_deepseek_api(prompt, system_prompt="你是一个专业的求职顾问�
         except Exception as e:
             try:
                 print(f"DeepSeek API调用失败 (尝试 {attempt + 1}/{max_retries}): {e}")
-            except:
+            except Exception:
                 pass
             if attempt < max_retries - 1:
                 import time
@@ -416,7 +416,7 @@ def _call_deepseek_api(prompt, system_prompt="你是一个专业的求职顾问�
             else:
                 try:
                     print(f"DeepSeek API调用最终失败: {e}")
-                except:
+                except Exception:
                     pass
                 return None
 
@@ -587,7 +587,7 @@ def query_company_info(company_name, force_refresh=False):
     if matched_name != company_name:
         try:
             print(f"模糊匹配: '{company_name}' -> '{matched_name}'")
-        except:
+        except Exception:
             pass
         company_name = matched_name
 
@@ -709,7 +709,7 @@ def analyze_company(company_name, user_context=""):
     except Exception as e:
         try:
             print(f"AI分析JSON解析失败: {e}")
-        except:
+        except Exception:
             pass
         # 如果解析失败，使用基础分析
         ai_analysis = {
@@ -874,7 +874,7 @@ def _calculate_offer_score(offer):
                     score += 20
                 elif salary_num >= 20:
                     score += 10
-        except:
+        except Exception:
             pass
 
     # 公司信息加分
@@ -1272,14 +1272,14 @@ def _generate_risk_warnings(company_data):
         rating = float(rep.get("overall_rating", "0").split("/")[0])
         if rating < 3.5:
             warnings.append(f"⚠️ 员工评分较低（{rating}/5），建议进一步了解工作环境")
-    except:
+    except Exception:
         pass
 
     try:
         rec_rate = float(rep.get("recommendation_rate", "0").replace("%", ""))
         if rec_rate < 60:
             warnings.append(f"⚠️ 员工推荐率较低（{rec_rate}%），建议深入了解企业文化")
-    except:
+    except Exception:
         pass
 
     # 检查差评点
@@ -1438,7 +1438,7 @@ def _calculate_offer_score(offer):
         if num_str:
             salary_val = int(num_str)
             score += min(40, salary_val // 1000)
-    except:
+    except Exception:
         pass
 
     # 公司评分
@@ -1448,7 +1448,7 @@ def _calculate_offer_score(offer):
     try:
         rating_val = float(rating.split("/")[0])
         score += int(rating_val * 10)
-    except:
+    except Exception:
         pass
 
     return min(100, score)
@@ -1787,7 +1787,7 @@ def analyze_companies_for_job_seeker(companies_data, preferences=""):
     except Exception as e:
         try:
             print(f"AI分析解析失败: {e}，使用备用分析")
-        except:
+        except Exception:
             pass
         # 使用备用分析逻辑补充其他字段
         fallback = _fallback_company_comparison(companies_data, preferences)
@@ -1972,7 +1972,7 @@ def _find_best_for_salary(companies_data):
             if salary > max_salary:
                 max_salary = salary
                 best = company["name"]
-        except:
+        except Exception:
             pass
 
     return best or companies_data[0]["name"]
@@ -2048,13 +2048,13 @@ def _find_best_for_culture(companies_data):
         try:
             rating = float(rep.get("overall_rating", "0").split("/")[0])
             score += rating * 2
-        except:
+        except Exception:
             pass
 
         try:
             rec_rate = float(rep.get("recommendation_rate", "0").replace("%", ""))
             score += rec_rate / 10
-        except:
+        except Exception:
             pass
 
         if score > best_score:
@@ -2140,14 +2140,14 @@ def _generate_comparison_risk_warnings(companies_data):
             rating = float(rep.get("overall_rating", "0").split("/")[0])
             if rating < 3.5:
                 warnings.append(f"⚠️ {name}员工评分较低（{rating}/5），建议进一步了解")
-        except:
+        except Exception:
             pass
 
         try:
             rec_rate = float(rep.get("recommendation_rate", "0").replace("%", ""))
             if rec_rate < 60:
                 warnings.append(f"⚠️ {name}员工推荐率较低（{rec_rate}%）")
-        except:
+        except Exception:
             pass
 
     return warnings

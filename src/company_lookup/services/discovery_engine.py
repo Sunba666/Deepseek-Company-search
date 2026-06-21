@@ -13,10 +13,11 @@
 import json
 import logging
 import random
-import threading
 import time
 from datetime import datetime
 from typing import Dict, List, Optional
+
+from .base_engine import BaseEngine
 
 logger = logging.getLogger(__name__)
 
@@ -65,61 +66,32 @@ MIN_INTERVAL = 5 * 60     # 5 分钟
 MAX_INTERVAL = 10 * 60    # 10 分钟
 
 
-class DiscoveryEngine:
+class DiscoveryEngine(BaseEngine):
     """持续发现引擎 — 后台循环运行。"""
 
     def __init__(self):
-        self._thread: Optional[threading.Thread] = None
-        self._stop_event = threading.Event()
+        super().__init__("Discovery")
         self._round_counter = 0
-        self._stats = {
+        self._stats.update({
             "total_rounds": 0,
             "total_discovered": 0,
             "total_added": 0,
             "total_failed": 0,
             "rounds": [],
-            "started_at": None,
             "stopped_at": None,
-            "is_running": False,
-            "crash_count": 0,
-            "last_error": None,
-            "last_heartbeat": None,
-        }
+        })
 
     # ═══════════════════════════════════════════════
     #  公共接口
     # ═══════════════════════════════════════════════
 
-    def start(self):
-        """启动持续发现循环（后台线程，不阻塞）。"""
-        if self.is_running():
-            logger.info("[Discovery] 引擎已在运行中")
-            return
-
-        self._stop_event.clear()
-        self._stats["started_at"] = datetime.now().isoformat()
-        self._stats["is_running"] = True
-        self._thread = threading.Thread(target=self._run_loop, daemon=True)
-        self._thread.start()
-        logger.info("[Discovery] ✅ 引擎已启动")
-
     def stop(self):
-        """请求停止循环（等待当前轮完成）。"""
-        if not self.is_running():
-            logger.info("[Discovery] 引擎未运行")
-            return
-        self._stop_event.set()
+        super().stop()
         self._stats["stopped_at"] = datetime.now().isoformat()
-        self._stats["is_running"] = False
-        logger.info("[Discovery] ⏹ 引擎已停止")
-
-    def is_running(self) -> bool:
-        return self._thread is not None and self._thread.is_alive()
 
     def status(self) -> Dict:
         """返回当前状态报告。"""
-        s = dict(self._stats)
-        s["is_running"] = self.is_running()
+        s = super().status()
         if self.is_running():
             s["next_strategy"] = ROUND_STRATEGIES[self._round_counter % len(ROUND_STRATEGIES)]["name"]
         return s
@@ -181,17 +153,11 @@ class DiscoveryEngine:
                 self._stop_event.wait(interval)
 
                 # 心跳标记
-                self._stats["last_heartbeat"] = datetime.now().isoformat()
+                self._heartbeat()
                 logger.debug("[Discovery] [HEARTBEAT] alive")
 
             except Exception as e:
-                logger.exception(f"[Discovery] 主循环全局异常: {e}")
-                self._stats["last_error"] = f"{type(e).__name__}: {e}"
-                self._stats["crash_count"] = self._stats.get("crash_count", 0) + 1
-                crash_count = self._stats["crash_count"]
-                backoff = min(10 * 3 ** (crash_count - 1), 300)
-                logger.warning(f"[Discovery] 第 {crash_count} 次崩溃，{backoff}s 后重试")
-                self._stop_event.wait(backoff)
+                self._handle_crash(e)
                 continue
 
         self._stats["stopped_at"] = datetime.now().isoformat()

@@ -135,7 +135,7 @@ class MultiSourceOrchestrator:
         except Exception as e:
             try:
                 print(f"[舆情搜索异常] {e}")
-            except:
+            except Exception:
                 pass
             return []
 
@@ -156,7 +156,7 @@ class MultiSourceOrchestrator:
         except Exception as e:
             try:
                 print(f"[风险核查异常] {e}")
-            except:
+            except Exception:
                 pass
             return []
 
@@ -255,7 +255,7 @@ class ConflictDetector:
                 avg_salary = sum(float(n) for n in salary_nums) / len(salary_nums)
             else:
                 return None
-        except:
+        except Exception:
             return None
 
         # 注册资本
@@ -271,7 +271,7 @@ class ConflictDetector:
                 capital *= 10000
             elif '亿' in capital_text:
                 capital *= 100000000
-        except:
+        except Exception:
             return None
 
         # 检测矛盾
@@ -411,7 +411,7 @@ class ConflictDetector:
                     elif 'k' in item["salary"].lower() or 'K' in item["salary"]:
                         val *= 1000
                     all_salaries.append((val, item))
-                except:
+                except Exception:
                     pass
 
         if len(all_salaries) < 2:

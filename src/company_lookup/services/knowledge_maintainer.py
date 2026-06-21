@@ -10,10 +10,11 @@
 import json
 import logging
 import random
-import threading
 import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
+
+from .base_engine import BaseEngine
 
 logger = logging.getLogger(__name__)
 
@@ -33,23 +34,19 @@ REQUIRED_DISTILL_FIELDS = [
 CRITICAL_FIELDS = ["status", "registered_capital", "legal_person"]
 
 
-class KnowledgeMaintainer:
+class KnowledgeMaintainer(BaseEngine):
     """知识库维护引擎 — 后台循环运行。"""
 
     def __init__(self):
-        self._thread: Optional[threading.Thread] = None
-        self._stop_event = threading.Event()
-        self._stats = {
+        super().__init__("Maintainer")
+        self._stats.update({
             "total_checks": 0,
             "verified": 0,
             "refreshed": 0,
             "completeness_fixed": 0,
             "reports": [],
             "last_health_report": None,
-            "is_running": False,
-            "started_at": None,
-            "last_heartbeat": None,
-        }
+        })
         # 待验证队列（公司名 → 时间戳）
         self._verify_queue: Dict[str, float] = {}
 
@@ -57,30 +54,8 @@ class KnowledgeMaintainer:
     #  公共接口
     # ═══════════════════════════════════════════════
 
-    def start(self):
-        if self.is_running():
-            logger.info("[Maintainer] 已在运行中")
-            return
-        self._stop_event.clear()
-        self._stats["started_at"] = datetime.now().isoformat()
-        self._stats["is_running"] = True
-        self._thread = threading.Thread(target=self._run_loop, daemon=True)
-        self._thread.start()
-        logger.info("[Maintainer] ✅ 维护引擎已启动")
-
-    def stop(self):
-        if not self.is_running():
-            return
-        self._stop_event.set()
-        self._stats["is_running"] = False
-        logger.info("[Maintainer] ⏹ 维护引擎已停止")
-
-    def is_running(self) -> bool:
-        return self._thread is not None and self._thread.is_alive()
-
     def status(self) -> Dict:
-        s = dict(self._stats)
-        s["is_running"] = self.is_running()
+        s = super().status()
         s["queue_size"] = len(self._verify_queue)
         return s
 
@@ -131,20 +106,11 @@ class KnowledgeMaintainer:
                     })
                     last_health_report = now
             except Exception as e:
-                logger.exception(f"[Maintainer] 主循环异常: {e}")
-                self._stats["last_error"] = f"{type(e).__name__}: {e}"
-                self._stats["crash_count"] = self._stats.get("crash_count", 0) + 1
-                crash_count = self._stats["crash_count"]
-                # 指数退避：第一次 10s，然后 30s，然后 60s ...
-                backoff = min(10 * 3 ** (crash_count - 1), 300)
-                logger.warning(f"[Maintainer] 第 {crash_count} 次崩溃，{backoff}s 后重试")
-                self._stop_event.wait(backoff)
+                self._handle_crash(e)
                 continue
 
             self._stop_event.wait(60)  # 每分钟唤醒一次
-            # 心跳标记
-            self._stats["last_heartbeat"] = datetime.now().isoformat()
-            logger.debug("[Maintainer] [HEARTBEAT] alive")
+            self._heartbeat()
 
     # ═══════════════════════════════════════════════
     #  1. 后台验证（关键字段变化检测）

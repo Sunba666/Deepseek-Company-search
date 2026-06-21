@@ -27,29 +27,29 @@ class ReportService:
     if report.terminated:
         try:
             print(f"查询终止: {report.termination_reason}")
-        except:
+        except Exception:
             pass
         return
 
     # 展示三层数据
     try:
         print(f"公司名称: {report.entity.company_name}")
-    except:
+    except Exception:
         pass
     try:
         print(f"舆情数量: {report.total_sentiment_count}")
-    except:
+    except Exception:
         pass
     try:
         print(f"风险数量: {report.total_risk_count}")
-    except:
+    except Exception:
         pass
 
     # 展示矛盾点
     for conflict in report.conflicts:
         try:
             print(f"矛盾: {conflict.description}")
-        except:
+        except Exception:
             pass
     ```
     """

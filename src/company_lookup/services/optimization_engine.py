@@ -16,10 +16,11 @@ import os
 import random
 import subprocess
 import sys
-import threading
 import time
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
+
+from .base_engine import BaseEngine
 
 logger = logging.getLogger(__name__)
 
@@ -39,13 +40,12 @@ _PROJECT_ROOT = os.path.dirname(  # services/ → src/ → 项目根
 LOG_PATH = os.path.join(_PROJECT_ROOT, "docs", "optimization_log.md")
 
 
-class OptimizationEngine:
+class OptimizationEngine(BaseEngine):
     """永续自动优化引擎 — 后台循环运行。"""
 
     def __init__(self):
-        self._thread: Optional[threading.Thread] = None
-        self._stop_event = threading.Event()
-        self._stats = {
+        super().__init__("Optimizer")
+        self._stats.update({
             "total_scans": 0,
             "total_issues": 0,
             "auto_fixed": 0,
@@ -54,11 +54,8 @@ class OptimizationEngine:
             "fixes_by_priority": {P0_BLOCKING: 0, P1_SEVERE: 0, P2_EXPERIENCE: 0},
             "last_scan_time": None,
             "last_summary_time": None,
-            "is_running": False,
-            "started_at": None,
             "current_phase": "idle",
-            "last_heartbeat": None,
-        }
+        })
         self._issues_log: List[Dict] = []
         self._fixes_log: List[Dict] = []
 
@@ -67,35 +64,19 @@ class OptimizationEngine:
     # ═══════════════════════════════════════════════
 
     def start(self):
-        if self.is_running():
-            logger.info("[Optimizer] 已在运行中")
-            return
-        self._stop_event.clear()
-        self._stats["started_at"] = datetime.now().isoformat()
-        self._stats["is_running"] = True
-        self._thread = threading.Thread(target=self._run_loop, daemon=True)
-        self._thread.start()
-        self._log_to_file("## 🚀 优化引擎启动", f"启动时间: {datetime.now().isoformat()}")
-        logger.info("[Optimizer] ✅ 优化引擎已启动")
+        super().start()
+        self._log_to_file("## 优化引擎启动", f"启动时间: {datetime.now().isoformat()}")
 
     def stop(self):
-        if not self.is_running():
-            return
-        self._stop_event.set()
-        self._stats["is_running"] = False
         self._generate_daily_summary()
-        self._log_to_file("## ⏹ 优化引擎停止", f"停止时间: {datetime.now().isoformat()}")
-        logger.info("[Optimizer] ⏹ 优化引擎已停止")
-
-    def is_running(self) -> bool:
-        return self._thread is not None and self._thread.is_alive()
+        self._log_to_file("## 优化引擎停止", f"停止时间: {datetime.now().isoformat()}")
+        super().stop()
 
     def status(self) -> Dict:
         s = dict(self._stats)
         s["is_running"] = self.is_running()
         s["recent_fixes"] = self._fixes_log[-5:] if self._fixes_log else []
         s["recent_issues"] = self._issues_log[-5:] if self._issues_log else []
-        # 确保所有数据可 JSON 序列化
         return _sanitize_for_json(s)
 
     # ═══════════════════════════════════════════════
@@ -117,19 +98,11 @@ class OptimizationEngine:
                 if scan_round % 5 == 1:
                     self._full_scan(scan_round)
             except Exception as e:
-                logger.exception(f"[Optimizer] 主循环异常: {e}")
-                self._stats["last_error"] = f"{type(e).__name__}: {e}"
-                self._stats["crash_count"] = self._stats.get("crash_count", 0) + 1
-                crash_count = self._stats["crash_count"]
-                backoff = min(10 * 3 ** (crash_count - 1), 300)
-                logger.warning(f"[Optimizer] 第 {crash_count} 次崩溃，{backoff}s 后重试")
-                self._stop_event.wait(backoff)
+                self._handle_crash(e)
                 continue
 
             self._stop_event.wait(QUICK_CHECK_INTERVAL)
-            # 心跳标记
-            self._stats["last_heartbeat"] = datetime.now().isoformat()
-            logger.debug("[Optimizer] [HEARTBEAT] alive")
+            self._heartbeat()
 
     def _quick_check(self):
         """快速预检：只检查最关键的几个指标。"""

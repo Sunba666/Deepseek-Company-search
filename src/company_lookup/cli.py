@@ -19,7 +19,7 @@ def check_update():
         if latest != current:
             try:
                 print(f"[UPDATE] Version {latest} available. Run `pip install --upgrade company-lookup` to upgrade.")
-            except:
+            except Exception:
                 pass
     except Exception:
         pass
@@ -34,6 +34,6 @@ def main():
     check_update()
     try:
         print(f"[INFO] Company Lookup AI started at {url}")
-    except:
+    except Exception:
         pass
     create_app().run(host="127.0.0.1", port=port, debug=False)

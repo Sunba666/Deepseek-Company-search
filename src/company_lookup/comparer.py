@@ -224,7 +224,7 @@ def _parse_salary(salary_str):
         # 提取数字部分
         num_str = ''.join([c for c in salary_str if c.isdigit() or c == '.'])
         return float(num_str)
-    except:
+    except Exception:
         return 0
 
 def _parse_rating(rating_str):
@@ -237,7 +237,7 @@ def _parse_rating(rating_str):
         if len(parts) > 0:
             return float(parts[0])
         return float(rating_str)
-    except:
+    except Exception:
         return 0
 
 def calculate_radar_data(company_data):
@@ -291,7 +291,7 @@ def calculate_radar_data(company_data):
             radar_data['运营稳定性'] = 65
         else:
             radar_data['运营稳定性'] = 50
-    except:
+    except Exception:
         pass
     
     scale = company_data.get('scale', '')
