@@ -4,7 +4,7 @@
 
 **多维度公司查询与分析工具** — 帮助求职者全面了解目标公司
 
-AI 驱动的求职研究平台 · 210+ 家预采集公司 · 多源数据聚合
+AI 驱动的求职研究平台 · 500+ 家持续发现公司 · 多源数据聚合 · 内推码智能采集
 
 </div>
 
@@ -14,7 +14,7 @@ AI 驱动的求职研究平台 · 210+ 家预采集公司 · 多源数据聚合
 
 ### 🔍 公司查询
 - 6 级实体解析管道 — 从简称、英文名、品牌名到工商注册名的智能匹配
-- 知识库优先查询 — 210+ 家预采集公司，新鲜度分层管理（7 天/30 天动态 TTL）
+- 知识库优先查询 — 500+ 家持续发现公司，新鲜度分层管理（7 天/30 天动态 TTL）
 - 多维度数据展示：工商信息、薪酬福利、员工口碑、面试经验、司法风险
 
 ### 📊 公司对比
@@ -26,6 +26,12 @@ AI 驱动的求职研究平台 · 210+ 家预采集公司 · 多源数据聚合
 - 一键收藏感兴趣的公司
 - 关注列表页面，集中管理求职目标
 - 数据持久化存储，跨会话保留
+
+### 🎯 内推码聚合（NEW）
+- 从脉脉、知乎自动采集内推码，聚合展示
+- DeepSeek AI 批量验证内推码真伪（30min 周期）
+- 用户反馈「已失效」兜底（3 次自动过期）
+- 企业详情页内嵌该司内推码
 
 ### 🤖 AI 智能分析
 - DeepSeek 驱动的高效分析（模型特性利用蒸馏数据，降低 Token 消耗）
@@ -40,25 +46,16 @@ AI 驱动的求职研究平台 · 210+ 家预采集公司 · 多源数据聚合
 ### 📋 更多工具
 - **Offer 对比** — 多 Offer 横向比较
 - **简历优化** — AI 辅助简历改进
-- **求职看板** — 招聘信息聚合
+- **求职看板** — 招聘信息聚合看板
 
 ### 🛡️ 系统可靠性
-- **3 个后台守护引擎** — 知识库维护、数据优化、公司发现，全部在 `/admin/system` 可视化
+- **4 个后台守护引擎** — 知识库维护、数据优化、公司发现、内推码采集，全部在 `/admin/system` 可视化
+- **统一健康监控** — 顶部大横幅（绿/黄/红）+ 实时心跳标记 + 崩溃计数
+- **API 统一健康端点** — `GET /api/health`，返回所有引擎状态
 - **自动崩溃恢复** — 引擎异常时指数退避重试，不静默死亡
 - **API 降级追踪** — 实时 API 不可用时自动降级 Mock 数据，并在系统状态页累计计数
 - **知识库写回** — 实时 API 数据同步写回知识库，下次查询 0 网络开销
 - **29 条集成测试** — `pytest tests/`，覆盖搜索、仪表盘、一致性、写回路径
-
----
-
-## 截图
-
-| 首页 | 公司详情 | 系统状态 |
-|------|---------|---------|
-| ![首页] | ![详情] | ![状态] |
-| 搜索入口 + 快速跳转 | 多维数据 + ⭐ 关注 | 引擎监控 + 降级统计 |
-
-*(截图待添加)*
 
 ---
 
@@ -68,10 +65,10 @@ AI 驱动的求职研究平台 · 210+ 家预采集公司 · 多源数据聚合
 |---|------|
 | **后端框架** | Python 3.10+ · Flask 3.0+ |
 | **模板引擎** | Jinja2 · HTMX（动态片段加载） |
-| **数据存储** | SQLite（company_knowledge.db · company_data.db） |
-| **API 集成** | 天眼查 · 启信宝 · Tavily · DeepSeek |
-| **AI 模型** | DeepSeek Chat（实体消歧 · 报告生成 · 数据蒸馏） |
-| **后台引擎** | threading 守护线程（维护 · 优化 · 发现） |
+| **数据存储** | SQLite（company_knowledge.db · company_data.db · jobboard.db） |
+| **API 集成** | 天眼查 · 企查查 · 启信宝 · Tavily · DeepSeek |
+| **AI 模型** | DeepSeek Chat（实体消歧 · 报告生成 · 数据蒸馏 · 内推码验证） |
+| **后台引擎** | threading 守护线程（维护 · 优化 · 发现 · 采集） |
 | **测试** | pytest · pytest-asyncio |
 | **代码质量** | Black · Ruff |
 
@@ -88,8 +85,8 @@ AI 驱动的求职研究平台 · 210+ 家预采集公司 · 多源数据聚合
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-org/company-lookup.git
-cd company-lookup
+git clone https://github.com/Sunba666/Deepseek-Company-search.git
+cd Deepseek-Company-search
 
 # 安装项目及依赖
 pip install -e .
@@ -205,7 +202,8 @@ DEEPSEEK_API_KEY=                 # DeepSeek        https://platform.deepseek.co
 company-lookup/
 ├── data/                          # 数据文件
 │   ├── mock_companies.json        # 12 家公司的 Mock 数据
-│   └── favorites.json             # 用户收藏
+│   ├── favorites.json             # 用户收藏
+│   └── jobboard.db                # 求职看板 + 内推码数据
 ├── src/
 │   └── company_lookup/
 │       ├── app.py                 # Flask 应用工厂 + 后台引擎启动
@@ -216,10 +214,11 @@ company-lookup/
 │       ├── data_store.py          # 缓存层
 │       ├── htmx_utils.py          # HTMX 工具函数
 │       ├── routes/                # Flask 路由
-│       │   ├── main.py            # 首页 + 导航
+│       │   ├── main.py            # 首页 + 导航 + 求职看板
 │       │   ├── company.py         # 搜索 + 详情 + 系统状态 + 收藏
 │       │   ├── compare.py         # 对比
-│       │   └── config.py          # API Key 配置页面
+│       │   ├── config.py          # API Key 配置页面
+│       │   └── referral.py        # 内推码聚合页 + 搜索 + 反馈
 │       ├── services/              # 业务逻辑层
 │       │   ├── orchestrator.py    # 多源协同调度器
 │       │   ├── entity_resolver.py # 6 级实体解析器
@@ -230,6 +229,14 @@ company-lookup/
 │       │   ├── knowledge_maintainer.py # 维护引擎（后台线程）
 │       │   ├── optimization_engine.py  # 优化引擎（后台线程）
 │       │   ├── discovery_engine.py     # 发现引擎（后台线程）
+│       │   ├── referral_collector.py   # 内推码采集引擎（后台线程）
+│       │   ├── referral_service.py     # 内推码统一接口层
+│       │   ├── referral_db.py          # 内推码数据库操作
+│       │   ├── referral_ai_validator.py # 内推码 AI 批量验证
+│       │   ├── scrapers/               # 内推码采集适配器
+│       │   │   ├── __init__.py         # Scraper ABC 协议
+│       │   │   ├── maimai.py           # 脉脉采集器
+│       │   │   └── zhihu.py            # 知乎采集器
 │       │   ├── job_matcher.py     # 求职匹配引擎
 │       │   ├── entity_api.py      # 天眼查/企查查客户端
 │       │   ├── sentiment_api.py   # Tavily/必应客户端
@@ -249,11 +256,15 @@ company-lookup/
 │           ├── base.html          # 布局 + 导航
 │           ├── index.html         # 首页
 │           ├── dashboard.html     # 公司查询
-│           ├── company_detail.html # 公司详情 + ⭐ 关注
+│           ├── company_detail.html # 公司详情 + ⭐ 关注 + 内推码
 │           ├── compare.html       # 公司对比
 │           ├── favorites.html     # 我的关注
 │           ├── job_match.html     # 求职匹配
-│           ├── system_health.html # 系统运行状态
+│           ├── system_health.html # 系统运行状态（含心跳监控）
+│           ├── referral.html      # 内推码聚合页
+│           ├── partials/
+│           │   ├── referral_list.html   # 内推码列表片段
+│           │   └── referral_codes.html  # 详情页内推码片段
 │           └── ...
 ├── tests/
 │   ├── conftest.py                # Flask test client fixture
@@ -270,15 +281,21 @@ company-lookup/
 
 ## 后台引擎
 
-三个后台守护线程，自动随应用启动（可通过 `DISABLE_BACKGROUND_SERVICES=true` 禁用）：
+四个后台守护线程，自动随应用启动（可通过 `DISABLE_BACKGROUND_SERVICES=true` 禁用）：
 
 | 引擎 | 频率 | 职责 |
 |------|------|------|
 | **知识库维护引擎** | 10min 验证 / 1h 完整性 / 6h 刷新 | 验证关键字段、补充缺失维度、刷新 >30天过期数据、生成健康报告 |
 | **永续优化引擎** | 2min 快速预检 / 10min 全量扫描 | 自动扫描并修复数据问题（API Key 失效、维度不足、Mock 降级） |
 | **持续发现引擎** | 轮流执行 6 种发现策略 | 通过招聘信息、行业关键词、关联企业扩展发现新公司 |
+| **内推码采集引擎** | 1h 采集 / 30min AI 验证 | 从脉脉、知乎采集内推码，DeepSeek 批量验证真伪 |
 
-引擎状态在 **`/admin/system`** 可视化，包括运行状态、累计指标、崩溃次数和异常信息。
+引擎状态在 **`/admin/system`** 可视化，包括：
+- 🟢🟡🔴 顶部大横幅（整体健康状态一览）
+- 每个引擎的运行状态、累计操作、心跳时间、崩溃次数
+- 页面每 30 秒自动刷新
+
+也可通过 `GET /api/health` 获取统一 JSON 状态。
 
 ---
 
@@ -323,6 +340,7 @@ pytest tests/test_search.py::TestHomepageSearch -v
 - 路由层（`routes/`）保持轻薄，业务逻辑下沉到 `services/`
 - 数据源新增一条 API 时：实现客户端类 → 注册到聚合器 → 修改 `MockDataProvider` 降级
 - 新增后台引擎：实现 start/stop/status/is_running → 在 `app.py` 启动
+- 新增内推码平台：实现 Scraper ABC → 注册到 `ReferralCollector`
 
 ---
 
