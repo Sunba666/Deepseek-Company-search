@@ -172,13 +172,15 @@ class OptimizationEngine(BaseEngine):
         try:
             from ..services.knowledge_db import _get_conn
             conn = _get_conn()
-            pending = conn.execute(
-                "SELECT COUNT(*) FROM fetch_tasks WHERE status='pending'"
-            ).fetchone()[0]
-            running = conn.execute(
-                "SELECT COUNT(*) FROM fetch_tasks WHERE status='running'"
-            ).fetchone()[0]
-            conn.close()
+            try:
+                pending = conn.execute(
+                    "SELECT COUNT(*) FROM fetch_tasks WHERE status='pending'"
+                ).fetchone()[0]
+                running = conn.execute(
+                    "SELECT COUNT(*) FROM fetch_tasks WHERE status='running'"
+                ).fetchone()[0]
+            finally:
+                conn.close()
 
             if pending > 50:
                 issues.append({
@@ -259,55 +261,52 @@ class OptimizationEngine(BaseEngine):
 
             conn = _get_conn()
             conn.row_factory = sqlite3.Row
+            try:
+                total = conn.execute("SELECT COUNT(*) FROM companies").fetchone()[0]
+                distilled = conn.execute(
+                    "SELECT COUNT(DISTINCT company_id) FROM company_data WHERE data_type='distilled'"
+                ).fetchone()[0]
 
-            # 检查未蒸馏公司
-            total = conn.execute("SELECT COUNT(*) FROM companies").fetchone()[0]
-            distilled = conn.execute(
-                "SELECT COUNT(DISTINCT company_id) FROM company_data WHERE data_type='distilled'"
-            ).fetchone()[0]
+                if total > 0 and distilled < total:
+                    pct = distilled / total * 100
+                    if pct < 80:
+                        issues.append({
+                            "id": "low_distill_rate",
+                            "priority": P1_SEVERE if pct < 50 else P2_EXPERIENCE,
+                            "title": f"蒸馏覆盖率仅 {pct:.0f}%",
+                            "detail": f"{total} 家中仅 {distilled} 家完成蒸馏",
+                            "fix": "auto",
+                            "fix_fn": self._fix_distill_remaining,
+                        })
 
-            if total > 0 and distilled < total:
-                pct = distilled / total * 100
-                if pct < 80:
+                old = conn.execute("""
+                    SELECT COUNT(*) FROM companies
+                    WHERE last_verified_at < datetime('now', '-30 days')
+                """).fetchone()[0]
+                if old > 10:
                     issues.append({
-                        "id": "low_distill_rate",
-                        "priority": P1_SEVERE if pct < 50 else P2_EXPERIENCE,
-                        "title": f"蒸馏覆盖率仅 {pct:.0f}%",
-                        "detail": f"{total} 家中仅 {distilled} 家完成蒸馏",
+                        "id": "stale_data_bulk",
+                        "priority": P2_EXPERIENCE,
+                        "title": f"{old} 家公司数据超过30天未更新",
+                        "detail": "需创建刷新任务",
                         "fix": "auto",
-                        "fix_fn": self._fix_distill_remaining,
+                        "fix_fn": self._fix_refresh_stale,
                     })
 
-            # 检查过期数据
-            old = conn.execute("""
-                SELECT COUNT(*) FROM companies
-                WHERE last_verified_at < datetime('now', '-30 days')
-            """).fetchone()[0]
-            if old > 10:
-                issues.append({
-                    "id": "stale_data_bulk",
-                    "priority": P2_EXPERIENCE,
-                    "title": f"{old} 家公司数据超过30天未更新",
-                    "detail": "需创建刷新任务",
-                    "fix": "auto",
-                    "fix_fn": self._fix_refresh_stale,
-                })
-
-            # 检查缺失 city 字段
-            no_city = conn.execute(
-                "SELECT COUNT(*) FROM companies WHERE city IS NULL OR city=''"
-            ).fetchone()[0]
-            if no_city > 0:
-                issues.append({
-                    "id": "missing_city",
-                    "priority": P2_EXPERIENCE,
-                    "title": f"{no_city} 家公司缺少城市信息",
-                    "detail": "影响求职匹配的城市筛选",
-                    "fix": "auto",
-                    "fix_fn": self._fix_missing_city,
-                })
-
-            conn.close()
+                no_city = conn.execute(
+                    "SELECT COUNT(*) FROM companies WHERE city IS NULL OR city=''"
+                ).fetchone()[0]
+                if no_city > 0:
+                    issues.append({
+                        "id": "missing_city",
+                        "priority": P2_EXPERIENCE,
+                        "title": f"{no_city} 家公司缺少城市信息",
+                        "detail": "影响求职匹配的城市筛选",
+                        "fix": "auto",
+                        "fix_fn": self._fix_missing_city,
+                    })
+            finally:
+                conn.close()
         except Exception as e:
             logger.warning(f"[Optimizer] 知识库扫描异常: {e}")
 
@@ -541,33 +540,35 @@ class OptimizationEngine(BaseEngine):
             conn.row_factory = sqlite3.Row
 
             # 从蒸馏数据填充 city
-            distilled = conn.execute("""
-                SELECT c.id as company_id, cd.content, c.city
-                FROM companies c
-                JOIN company_data cd ON c.id=cd.company_id AND cd.data_type='distilled'
-                WHERE c.city IS NULL OR c.city = ''
-            """).fetchall()
+            try:
+                distilled = conn.execute("""
+                    SELECT c.id as company_id, cd.content, c.city
+                    FROM companies c
+                    JOIN company_data cd ON c.id=cd.company_id AND cd.data_type='distilled'
+                    WHERE c.city IS NULL OR c.city = ''
+                """).fetchall()
 
-            fixed_city = 0
-            fixed_province = 0
-            for d in distilled:
-                try:
-                    data = json.loads(d["content"])
-                    kf = data.get("key_facts", {})
-                    city = kf.get("city", "")
-                    if city and not d["city"]:
-                        conn.execute("UPDATE companies SET city=? WHERE id=?", (city, d["company_id"]))
-                        fixed_city += 1
-                        # 同时推导省份
-                        province = _city_to_province(city)
-                        if province:
-                            conn.execute("UPDATE companies SET province=? WHERE id=?", (province, d["company_id"]))
-                            fixed_province += 1
-                except Exception:
-                    pass
+                fixed_city = 0
+                fixed_province = 0
+                for d in distilled:
+                    try:
+                        data = json.loads(d["content"])
+                        kf = data.get("key_facts", {})
+                        city = kf.get("city", "")
+                        if city and not d["city"]:
+                            conn.execute("UPDATE companies SET city=? WHERE id=?", (city, d["company_id"]))
+                            fixed_city += 1
+                            # 同时推导省份
+                            province = _city_to_province(city)
+                            if province:
+                                conn.execute("UPDATE companies SET province=? WHERE id=?", (province, d["company_id"]))
+                                fixed_province += 1
+                    except Exception:
+                        pass
 
-            conn.commit()
-            conn.close()
+                conn.commit()
+            finally:
+                conn.close()
             return (True, f"已补全 {fixed_city} 家城市 + {fixed_province} 家省份")
         except Exception as e:
             return (False, str(e))

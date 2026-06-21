@@ -89,7 +89,18 @@ class BaseAPIClient(ABC):
         self.base_url = base_url or self._get_base_url()
         self.timeout = timeout
         self.circuit_breaker = CircuitBreaker()
-        self.session = requests.Session()
+        self._session: Optional[requests.Session] = None
+
+    @property
+    def session(self) -> requests.Session:
+        """延迟创建 Session（避免未关闭的 Session 泄漏）。"""
+        if self._session is None:
+            self._session = requests.Session()
+        return self._session
+
+    def __del__(self):
+        if self._session is not None:
+            self._session.close()
 
     def _get_env_key(self) -> Optional[str]:
         """从环境变量获取API密钥"""

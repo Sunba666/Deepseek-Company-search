@@ -125,13 +125,13 @@ def _get_db():
 
 
 def _get_user_id():
-    """Get or create a session-based user ID."""
-    if not hasattr(_get_user_id, "_uid"):
+    """Get or create a session-based user ID (stored on request context, thread-safe)."""
+    if not hasattr(request, "_jobboard_uid"):
         uid = request.cookies.get("jobboard_uid", "")
         if not uid or len(uid) < 8:
             uid = str(uuid.uuid4())[:12]
-        _get_user_id._uid = uid
-    return _get_user_id._uid
+        request._jobboard_uid = uid
+    return request._jobboard_uid
 
 
 @bp.route("/jobboard", methods=["GET"])

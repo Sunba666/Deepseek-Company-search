@@ -236,13 +236,15 @@ class KnowledgeMaintainer(BaseEngine):
                 ORDER BY last_verified_at ASC
                 LIMIT 20
             """).fetchall()
+        finally:
             conn.close()
 
-            if not stale:
-                logger.info("[Refresh] 无过期数据")
-                return
+        if not stale:
+            logger.info("[Refresh] 无过期数据")
+            return
 
-            logger.info(f"[Refresh] 发现 {len(stale)} 家过期公司，提交刷新任务")
+        logger.info(f"[Refresh] 发现 {len(stale)} 家过期公司，提交刷新任务")
+        try:
             for r in stale:
                 if self._stop_event.is_set():
                     break
