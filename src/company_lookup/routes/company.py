@@ -1625,6 +1625,13 @@ def api_referral_collector_status():
     from ..services.referral_collector import collector
     return jsonify({"code": 0, "data": collector.status()})
 
+@bp.route("/api/referral-collector/stop", methods=["POST"])
+def api_referral_collector_stop():
+    """停止内推码采集引擎。"""
+    from ..services.referral_collector import collector
+    collector.stop()
+    return jsonify({"code": 0, "message": "内推码采集引擎已停止", "status": collector.status()})
+
 
 @bp.route("/api/health", methods=["GET"])
 def api_health():
