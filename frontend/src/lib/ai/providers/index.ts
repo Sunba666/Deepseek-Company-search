@@ -12,17 +12,15 @@ let _currentConfig: { provider: AIModelProvider; model: string } = { provider: "
 
 export function getAIProvider(): AIProvider {
   if (_currentProvider) return _currentProvider;
-  const apiKey = typeof window !== "undefined" ? localStorage.getItem("ai_api_key") || "" : "";
   const Constructor = providerConstructors[_currentConfig.provider];
   if (!Constructor) throw new Error("Unknown provider: " + _currentConfig.provider);
-  _currentProvider = new Constructor({ apiKey, model: _currentConfig.model });
+  _currentProvider = new Constructor({ apiKey: "", model: _currentConfig.model });
   return _currentProvider;
 }
 
 export function setAIProvider(provider: AIModelProvider, model: string, apiKey?: string) {
   _currentProvider = null;
   _currentConfig = { provider, model };
-  if (apiKey && typeof window !== "undefined") localStorage.setItem("ai_api_key", apiKey);
 }
 
 export function getCurrentConfig() { return _currentConfig; }

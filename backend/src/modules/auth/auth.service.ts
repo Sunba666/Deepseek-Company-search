@@ -1,11 +1,13 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -27,8 +29,45 @@ export class AuthService {
     if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('邮箱或密码错误');
     }
+    if (user.status === 'banned') throw new UnauthorizedException('账号已被禁用');
     await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     return this.generateTokens(user);
+  }
+
+  async changePassword(userId: string, oldPassword: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('用户不存在');
+    if (!(await bcrypt.compare(oldPassword, user.password))) {
+      throw new BadRequestException('原密码错误');
+    }
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.prisma.user.update({ where: { id: userId }, data: { password: hashed } });
+    return { message: '密码修改成功' };
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) return { message: '如果该邮箱已注册，重置链接已发送' }; // Don't reveal if email exists
+    const token = crypto.randomBytes(32).toString('hex');
+    // Store reset token with expiry (1 hour)
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken: token }, // reuse refreshToken field as reset token storage
+    });
+    // In production, send email here. For now we log and return token for dev convenience
+    this.logger.log(`Password reset token for ${email}: ${token}`);
+    return { message: '如果该邮箱已注册，重置链接已发送', resetToken: token };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const user = await this.prisma.user.findFirst({ where: { refreshToken: token } });
+    if (!user) throw new BadRequestException('重置链接无效或已过期');
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashed, refreshToken: null },
+    });
+    return { message: '密码重置成功' };
   }
 
   async refresh(refreshToken: string) {

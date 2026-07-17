@@ -1,5 +1,7 @@
 import type { AIProvider, AICompletionRequest, AICompletionResponse, AIProviderConfig } from "./types";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+
 export class DeepSeekProvider implements AIProvider {
   readonly name = "deepseek" as const;
   private config: AIProviderConfig;
@@ -9,44 +11,37 @@ export class DeepSeekProvider implements AIProvider {
   }
 
   async complete(req: AICompletionRequest): Promise<AICompletionResponse> {
-    const body = {
-      model: req.model || this.config.model,
-      messages: req.messages,
-      temperature: req.temperature ?? 0.7,
-      max_tokens: req.maxTokens ?? 4096,
-      stream: false,
-    };
-
-    const res = await fetch(this.config.baseUrl || "https://api.deepseek.com/v1/chat/completions", {
+    const res = await fetch(API_BASE + "/ai/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + this.config.apiKey },
-      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: req.messages,
+        model: req.model || this.config.model,
+        temperature: req.temperature ?? 0.7,
+        maxTokens: req.maxTokens ?? 4096,
+      }),
     });
-    if (!res.ok) throw new Error("DeepSeek API error: " + res.status);
-
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => "");
+      throw new Error(`AI API error: ${res.status} ${errBody}`);
+    }
     const json = await res.json();
-    return {
-      content: json.choices[0].message.content,
-      model: json.model,
-      usage: json.usage ? { promptTokens: json.usage.prompt_tokens, completionTokens: json.usage.completion_tokens, totalTokens: json.usage.total_tokens } : undefined,
-    };
+    const data = json.data ?? json;
+    return { content: data.content, model: data.model, usage: data.usage };
   }
 
   async *stream(req: AICompletionRequest): AsyncGenerator<string, void, unknown> {
-    const body = {
-      model: req.model || this.config.model,
-      messages: req.messages,
-      temperature: req.temperature ?? 0.7,
-      max_tokens: req.maxTokens ?? 4096,
-      stream: true,
-    };
-
-    const res = await fetch(this.config.baseUrl || "https://api.deepseek.com/v1/chat/completions", {
+    const res = await fetch(API_BASE + "/ai/stream", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + this.config.apiKey },
-      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: req.messages,
+        model: req.model || this.config.model,
+        temperature: req.temperature ?? 0.7,
+        maxTokens: req.maxTokens ?? 4096,
+      }),
     });
-    if (!res.ok) throw new Error("DeepSeek stream error: " + res.status);
+    if (!res.ok) throw new Error("AI stream error: " + res.status);
 
     const reader = res.body?.getReader();
     if (!reader) throw new Error("No response body");
@@ -61,9 +56,8 @@ export class DeepSeekProvider implements AIProvider {
         const data = line.slice(6);
         if (data === "[DONE]") return;
         try {
-          const json = JSON.parse(data);
-          const content = json.choices?.[0]?.delta?.content;
-          if (content) yield content;
+          const parsed = JSON.parse(data);
+          if (parsed.content) yield parsed.content;
         } catch {}
       }
     }

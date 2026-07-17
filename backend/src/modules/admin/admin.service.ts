@@ -25,6 +25,7 @@ export class AdminService {
   }
 
   async updateUserRole(id: string, role: string) { return this.prisma.user.update({ where: { id }, data: { role } }); }
+
   async toggleUserStatus(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     return this.prisma.user.update({ where: { id }, data: { status: user?.status === 'active' ? 'banned' : 'active' } });
@@ -40,6 +41,20 @@ export class AdminService {
   async toggleJobStatus(id: string) {
     const job = await this.prisma.job.findUnique({ where: { id } });
     return this.prisma.job.update({ where: { id }, data: { isActive: !job?.isActive } });
+  }
+
+  async createJob(data: { companyId: string; title: string; category: string; city: string; salaryMin?: number; salaryMax?: number; experience?: string; education?: string; skills?: string[]; description?: string }) {
+    const company = await this.prisma.company.findUnique({ where: { id: data.companyId } });
+    return this.prisma.job.create({
+      data: {
+        companyId: data.companyId, companyName: company?.name || '',
+        title: data.title, category: data.category || '其他', city: data.city,
+        salaryMin: data.salaryMin, salaryMax: data.salaryMax,
+        experience: data.experience, education: data.education,
+        skills: data.skills || [], description: data.description,
+        isActive: true, publishedAt: new Date(),
+      },
+    });
   }
 
   async getAIConfig() { return { provider: process.env.AI_PROVIDER || 'deepseek', model: process.env.AI_MODEL || 'deepseek-chat', apiKey: process.env.AI_API_KEY ? '***' : '' }; }

@@ -53,28 +53,44 @@ export interface Job {
 
 export interface Referral {
   id: string;
-  company: Pick<Company, "id" | "name">;
+  company: Pick<Company, "id" | "name" | "slug"> & { logo?: string };
   jobTitle?: string;
+  job?: Pick<Job, "id" | "title" | "salaryMin" | "salaryMax">;
   referralCode: string;
   referralLink?: string;
   referrerName?: string;
+  referrerTitle?: string;
   isEmployee: boolean;
   isVerified: boolean;
   confidenceScore: number;
   confidenceLevel: "高可信" | "中等" | "低可信";
+  verifiedCount: number;
+  successCount: number;
+  failCount: number;
   publishedAt: string;
   expiresAt?: string;
   source?: string;
+  status?: string;
+  isFavorited?: boolean;
+  _count?: { referralFavorites: number; referralRatings: number };
 }
 
 export interface Application {
   id: string;
-  job: Pick<Job, "id" | "title"> & { company: Pick<Company, "id" | "name"> };
+  job: Pick<Job, "id" | "title" | "salaryMin" | "salaryMax" | "city" | "experience" | "education" | "skills"> & { company: Pick<Company, "id" | "name" | "slug"> };
   status: ApplicationStatus;
+  statusHistory?: { status: string; timestamp: string }[];
+  referralId?: string;
   referralCodeUsed?: string;
   notes?: string;
+  feedback?: string;
+  rating?: number;
+  expectedSalary?: number;
+  actualSalary?: number;
   appliedAt?: string;
+  appliedUrl?: string;
   updatedAt: string;
+  _count?: { interviewRecords: number };
 }
 
 export type ApplicationStatus =

@@ -10,6 +10,16 @@ async function bootstrap() {
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
+  // === Startup Config Check ===
+  const aiKey = config.get("ai.apiKey") || process.env.AI_API_KEY || "";
+  if (!aiKey || aiKey.startsWith("sk-your-")) {
+    logger.warn("AI_API_KEY is missing or using placeholder - AI features will fail with 401");
+    logger.warn("  Set a valid API key in backend/.env: AI_API_KEY=sk-xxx");
+  } else {
+    logger.log("AI_API_KEY loaded: " + aiKey.slice(0, 8) + "...");
+  }
+  // ===========================
+
   // Security
   app.use(helmet());
   app.enableCors({ origin: config.get('app.corsOrigin'), credentials: true });
