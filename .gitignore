@@ -53,3 +53,11 @@ src/docs/
 # OS
 .DS_Store
 Thumbs.db
+# Node
+node_modules/
+.next/
+dist/
+.cache/
+
+# Docker
+docker-volumes/

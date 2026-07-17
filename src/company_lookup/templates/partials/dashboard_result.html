@@ -1,7 +1,0 @@
-{% if error %}
-<div class="alert alert-danger mb-0">{{ error }}</div>
-{% elif data %}
-{% include 'partials/dashboard_tabs.html' %}
-{% else %}
-<div class="alert alert-warning mb-0">未找到公司数据</div>
-{% endif %}

@@ -1,0 +1,438 @@
+// ===== Prisma Schema — JobNav AI =====
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== 用户 =====
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  phone     String?
+  password  String
+  nickname  String?
+  avatar    String?
+  role      String   @default("user") // user | premium | enterprise | admin | super_admin
+  status    String   @default("active") // active | banned | inactive
+
+  // 求职信息
+  yearsExp        Int?
+  education       String?
+  currentCity     String?
+  currentCompany  String?
+  currentTitle    String?
+  skills          String[] // String array
+  salaryMin       Int?
+  salaryMax       Int?
+  preferredCities String[]
+
+  // 认证
+  emailVerified Boolean @default(false)
+  oauthProvider String?
+  oauthId       String?
+  refreshToken  String?
+  lastLoginAt   DateTime?
+
+  // 关系
+  applications    Application[]
+  favorites       Favorite[]
+  searchHistories SearchHistory[]
+  notifications   Notification[]
+  aiConversations AIConversation[]
+  resumes         Resume[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+}
+
+// ===== 公司 =====
+model Company {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String
+  nameEn      String?
+  slug        String  @unique
+  logo        String?
+  website     String?
+  description String?
+  industry    String?
+  scale       String?
+  stage       String?
+  city        String?
+  address     String?
+  stockCode   String?
+  isListed    Boolean @default(false)
+  isForeign   Boolean @default(false)
+  isUnicorn   Boolean @default(false)
+  isStateOwned Boolean @default(false)
+  source      String?
+  sourceUrl   String?
+  sourceId    String?
+
+  // 统计
+  hiringCount   Int  @default(0)
+  averageSalary Int?
+  heat          Int  @default(0)
+
+  // 关系
+  jobs           Job[]
+  referrals      Referral[]
+  salaries       Salary[]
+  interviews     Interview[]
+  companyProfile CompanyProfile?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([name])
+  @@index([slug])
+  @@index([industry])
+  @@index([city])
+}
+
+// ===== 岗位 =====
+model Job {
+  id          String  @id @default(uuid()) @db.Uuid
+  companyId   String  @db.Uuid
+  company     Company @relation(fields: [companyId], references: [id])
+  companyName String
+
+  title       String
+  category    String
+  subCategory String?
+
+  city      String
+  isRemote  Boolean @default(false)
+
+  salaryMin Int?
+  salaryMax Int?
+
+  experience String?
+  education  String?
+  skills    String[]
+
+  description String? @db.Text
+  requirements String? @db.Text
+  benefits    String? @db.Text
+  descriptionRaw String? @db.Text
+
+  sourceUrl      String?
+  sourcePlatform String?
+  isActive       Boolean @default(true)
+  isFeatured     Boolean @default(false)
+
+  publishedAt DateTime?
+  expiredAt   DateTime?
+  closedAt    DateTime?
+  crawledAt   DateTime?
+
+  // 关系
+  referrals    Referral[]
+  applications Application[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([category])
+  @@index([city])
+  @@index([isActive])
+  @@index([publishedAt])
+}
+
+// ===== 内推 =====
+model Referral {
+  id          String  @id @default(uuid()) @db.Uuid
+  companyId   String  @db.Uuid
+  company     Company @relation(fields: [companyId], references: [id])
+  companyName String
+  jobId       String? @db.Uuid
+  job         Job?    @relation(fields: [jobId], references: [id])
+
+  referralCode String
+  referralLink String?
+  referrerName String?
+  referrerTitle String?
+  isEmployee   Boolean @default(false)
+  isVerified   Boolean @default(false)
+
+  confidenceScore Int     @default(0)
+  confidenceLevel String?
+  confidenceReason String? @db.Text
+
+  verifiedCount Int @default(0)
+  successCount  Int @default(0)
+  failCount     Int @default(0)
+  lastVerifiedAt DateTime?
+
+  source    String?
+  sourceUrl String?
+
+  status    String @default("active") // active | expired | invalid
+  expiresAt DateTime?
+  notes     String? @db.Text
+
+  publishedAt DateTime?
+  crawledAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([status])
+  @@index([confidenceScore])
+}
+
+// ===== 投递记录 =====
+model Application {
+  id        String @id @default(uuid()) @db.Uuid
+  userId    String @db.Uuid
+  user      User   @relation(fields: [userId], references: [id])
+  jobId     String @db.Uuid
+  job       Job    @relation(fields: [jobId], references: [id])
+  companyId String @db.Uuid
+
+  status    String @default("saved") // saved | ready_to_apply | applied | hr_viewed | written_test | interview_1 | interview_2 | hr_interview | offer | rejected | withdrawn
+  statusHistory Json? // 状态变更历史
+
+  referralId       String?
+  referralCodeUsed String?
+
+  appliedAt DateTime?
+  appliedUrl String?
+  notes     String? @db.Text
+  feedback  String? @db.Text
+  rating    Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@unique([userId, jobId])
+  @@index([userId])
+  @@index([status])
+  @@index([companyId])
+}
+
+// ===== 收藏 =====
+model Favorite {
+  id         String @id @default(uuid()) @db.Uuid
+  userId     String @db.Uuid
+  user       User   @relation(fields: [userId], references: [id])
+  targetType String // job | company
+  targetId   String @db.Uuid
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, targetType, targetId])
+  @@index([userId])
+  @@index([targetType, targetId])
+}
+
+// ===== 简历 =====
+model Resume {
+  id      String @id @default(uuid()) @db.Uuid
+  userId  String @db.Uuid
+  user    User   @relation(fields: [userId], references: [id])
+  fileUrl String
+  fileType String // pdf | doc | docx
+  content String? @db.Text // 解析后的文本内容
+  parsed  Json?            // 结构化解析结果
+  isActive Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ===== 公司画像 =====
+model CompanyProfile {
+  id        String @id @default(uuid()) @db.Uuid
+  companyId String @unique @db.Uuid
+  company   Company @relation(fields: [companyId], references: [id])
+
+  overallScore Float?
+  hiringTrend  String?
+  hiringHeat   Int?
+  referralActivity Int?
+
+  salaryScore  Float?
+  cultureScore Float?
+  growthScore  Float?
+  stabilityScore Float?
+
+  summary String? @db.Text
+  pros    String[]
+  cons    String[]
+  tips    String? @db.Text
+
+  analyzedBy  String?
+  analyzedAt  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ===== 薪资 =====
+model Salary {
+  id          String @id @default(uuid()) @db.Uuid
+  companyId   String @db.Uuid
+  company     Company @relation(fields: [companyId], references: [id])
+  jobCategory String
+  jobTitle    String?
+  city        String
+  experience  String?
+
+  salaryAvg  Float?
+  salaryMedian Float?
+  salaryP25  Float?
+  salaryP75  Float?
+  salaryMin  Float?
+  salaryMax  Float?
+  sampleCount Int @default(0)
+  source      String?
+  period      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([jobCategory, city])
+}
+
+// ===== 面经 =====
+model Interview {
+  id          String @id @default(uuid()) @db.Uuid
+  companyId   String @db.Uuid
+  company     Company @relation(fields: [companyId], references: [id])
+  jobCategory String?
+  jobTitle    String?
+  content     String @db.Text
+  rounds      Int?
+  durationDays Int?
+  difficulty  String?
+  result      String? // offer | rejected | unknown
+  algorithmQuestions String[]
+  knowledgeQuestions String[]
+  hrQuestions        String[]
+  source      String?
+  sourceUrl   String?
+  authorId    String? @db.Uuid
+  status      String @default("pending") // pending | approved | rejected
+  helpfulCount Int @default(0)
+  interviewDate DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([companyId])
+  @@index([status])
+}
+
+// ===== AI 对话 =====
+model AIConversation {
+  id        String @id @default(uuid()) @db.Uuid
+  userId    String @db.Uuid
+  user      User   @relation(fields: [userId], references: [id])
+  title     String @default("新对话")
+  isStarred Boolean @default(false)
+  messages  AIMessage[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model AIMessage {
+  id             String @id @default(uuid()) @db.Uuid
+  conversationId String @db.Uuid
+  conversation   AIConversation @relation(fields: [conversationId], references: [id])
+  role           String // user | assistant | system
+  content        String @db.Text
+  tokenCount     Int?
+  modelUsed      String?
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
+}
+
+// ===== 通知 =====
+model Notification {
+  id        String @id @default(uuid()) @db.Uuid
+  userId    String @db.Uuid
+  user      User   @relation(fields: [userId], references: [id])
+  type      String // job_update | job_closed | new_referral | referral_expired | application_status | system
+  title     String
+  body      String? @db.Text
+  link      String?
+  metadata  Json?
+  isRead    Boolean @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, isRead])
+}
+
+// ===== 搜索历史 =====
+model SearchHistory {
+  id          String @id @default(uuid()) @db.Uuid
+  userId      String @db.Uuid
+  user        User   @relation(fields: [userId], references: [id])
+  query       String
+  filters     Json?
+  resultCount Int?
+  clickedJobId String? @db.Uuid
+  searchType  String? @default("keyword")
+  isAISearch  Boolean @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ===== 行为日志 =====
+model ActivityLog {
+  id         BigInt  @id @default(autoincrement())
+  userId     String? @db.Uuid
+  sessionId  String?
+  action     String // page_view | search | click | apply | favorite
+  targetType String?
+  targetId   String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  referer    String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ===== 系统日志 =====
+model SystemLog {
+  id         BigInt  @id @default(autoincrement())
+  level      String // info | warn | error | fatal
+  module     String
+  action     String?
+  message    String? @db.Text
+  metadata   Json?
+  stackTrace String? @db.Text
+  ipAddress  String?
+  userId     String? @db.Uuid
+  createdAt  DateTime @default(now())
+
+  @@index([level])
+  @@index([module])
+  @@index([createdAt])
+}
